@@ -5,7 +5,8 @@
 import pyautogui as pyag
 import sys
 
-SCALE = 0.5
+SCALE = 0.5  # Don't understand why, but the return from locate is off by factor of 2
+
 def locateCenter(path_image):
     """Wrapper around pyautogui locate center, adds except catch, and info printout"""
     try:
