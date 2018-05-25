@@ -25,8 +25,10 @@ def dragAndDrop(path_image_from, path_image_to):
     xf, yf = locateCenter(path_image_to)
     xi, yi = locateCenter(path_image_from)
 
+    print("Image centers found!  Begin drag and drop")
     pyag.moveTo(xi,yi)
-    pyag.dragTo(xf, yf, 2, button='left')
+    slow_drag_time = 2 # seconds
+    pyag.dragTo(xf, yf, slow_drag_time, button='left')
 
 
 
