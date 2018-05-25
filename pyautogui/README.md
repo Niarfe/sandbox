@@ -12,4 +12,5 @@ pip install -r requirements.txt
 2.  Seems to have a hard time every once in a while with cloud icon, I had to retake the png to get it working again.
 3.  For some reason, the scale is off, the mouse coordinates are returned correctly.  My screen is 1920x1080, and the moveto and so forth match.  But when I ask for the center location of an image, I get double the coordinate, thus the SCALE variable in the script to correct for that.
 
+Tryit out directly, ```python click_and_drag.py``` or import it and pass it your own images.
 
