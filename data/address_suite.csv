@@ -1,0 +1,12 @@
+ADDRESSES,SEQUENCE
+STE C,"[['APT'], ['LETTER']]"
+STE 141,"[['APT'], ['DIGIT']]"
+B102,[['ALNUM']]
+APT F15,"[['APT'], ['ALNUM']]"
+LOT 31,"[['APT'], ['DIGIT']]"
+# 2,"[['POUND'], ['DIGIT']]"
+# b,"[['POUND'], ['LETTER']]"
+1300,[['DIGIT']]
+SPC 36,"[['APT'], ['DIGIT']]"
+FL 2,"[['APT'], ['DIGIT']]"
+APT 3K,"[['APT'], ['NUMS_1AL']]"

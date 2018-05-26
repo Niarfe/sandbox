@@ -11,49 +11,53 @@ def load_category_from_file(fpath):
     return r'^(' + "|".join(ways) + r')$'
 
 def w(str_sentence):
-    return re.findall(r"[\w'/-:]+|[.,!?;#&]", str_sentence)
+    return re.findall(r"[\w'/-:]+|[,!?;#&]", str_sentence)
 
 seq = Hydraseq('input')
 
-ways = load_category_from_file('ways.csv')
+ways = load_category_from_file('data/words_way.csv')
 apts = load_category_from_file('apts.csv')
 nths = load_category_from_file('nth.csv')
 dirs = load_category_from_file('dirs.csv')
-arti = load_category_from_file('arti.csv')
+arti = load_category_from_file('data/words_arti.csv')
 pre  = load_category_from_file('pre.csv')
 deleg = load_category_from_file('deleg.csv')
+wordways = load_category_from_file('data/words_word_way.csv')
+sp_arti = load_category_from_file('data/words_sp_arti.csv')
 print(apts)
 def encoder(word, trim=True):
     encodings = [
         # LETTERS ONLY
-        ('ALPHA', [r'^[a-z]+$']), 
+        ('ALPHA', [r'^[a-z]+$']),
             ('LETTER', [r'^[a-z]$']),
-            ('WAY',  [ ways ]),
+            ('WAY', [ways]),
+            ('WORDWAY', [wordways]),
             ('APT', [ apts ]),
-            ('ARTI', [ arti ]),
+            ('ARTI', [arti]),
+            ('SP_ARTI', [sp_arti]),
             ('PRE',  [ pre ]),
             ('DIR',  [ dirs ]),
             ('POB2', [r'^box$']),
             ('DELEG', [r'^attn$', r'^attn:$', r'^c\/o$', r'^co$' ]),
             ('POB0', [r'^po$', r'^p\.o\.$']),
-        
+
         # NUMBERS ONLY
-        ('DIGIT', [r'^\d+$']), 
-        
+        ('DIGIT', [r'^\d+$']),
+
         # MIXED LETTERS AND NUMBERS
         ('ALNUM', [r'^(\d+[a-z]+|[a-z]+\d+)[\da-z]*$']),
             ('NUMSTR', [r'^\d+[a-z]+$' ]),
                 ('NTH',    [ nths ]),
                 ('NUMS_1AL', [ r'^\d+[a-z]$' ]),
             ('APT_NUM', [ r'apt\d+$', r'unit\d+$', r'bldg\d+$', r'ste\d+$', r'suite\d+$']),
-        
+
         # SYMBOLS ONLY
         ('COMMA', [r'^,$']),
         ('PERIOD', [r'^\.$']),
         ('POUND', [r'^#$']),
-        
+
         # LETTERS AND SYMBOLS
-        
+
         # NUMBERS AND SYMBOLS
 
         # INTERNAL MARKERS
@@ -65,7 +69,7 @@ def encoder(word, trim=True):
     if not trim:
         return encoding
     else:
-        if any([key in ['LETTER', 'WAY', 'APT', 'ARTI', 'PRE', 'DIR', 'DELEG', 'POB2', 'POB0'] for key in encoding]) and 'ALPHA' in encoding:
+        if any([key in ['SP_ARTI','LETTER', 'WORDWAY', 'WAY', 'APT', 'ARTI', 'PRE', 'DIR', 'DELEG', 'POB2', 'POB0'] for key in encoding]) and 'ALPHA' in encoding:
             encoding.remove('ALPHA')  # Redudant category level if we have probable meaning
         if any([key in ['NUMS_1AL', 'NUMSTR', 'NTH'] for key in encoding]) and 'ALNUM' in encoding:
             encoding.remove('ALNUM')  # Redudant category level if we have probable meaning
@@ -81,12 +85,21 @@ def train_with_provided_list(seq, matrix_lst):
     """matrix list means [['DIGIT'],['ALPHA'],['WAY']] for example"""
     return seq.insert(matrix_lst, is_learning=True).get_next_values()
 
+
 import csv
-with open('address_tuples_edited.csv', 'r') as source:
+with open('data/address_bases.csv', 'r') as source:
     csv_file = csv.DictReader(source)
     for row in csv_file:
         lst_sequence = eval(row['SEQUENCE'])
         lst_sequence.append(['ADDRESS'])
+        train_with_provided_list(seq, lst_sequence)
+
+
+with open('data/address_suite.csv', 'r') as source:
+    csv_file = csv.DictReader(source)
+    for row in csv_file:
+        lst_sequence = eval(row['SEQUENCE'])
+        lst_sequence.append(['SUITE'])
         train_with_provided_list(seq, lst_sequence)
 
 # valid po box
@@ -130,6 +143,10 @@ def is_deleg(seq, arr_st):
     assert isinstance(arr_st, list)
     return any([pred == 'ATTN' for pred in seq.look_ahead(encode_from_word_list(arr_st)).get_next_values()])
 
+def is_suite(seq, arr_st):
+    """Expects ["123","main","st"]"""
+    assert isinstance(arr_st, list)
+    return any([pred == 'SUITE' for pred in seq.look_ahead(encode_from_word_list(arr_st)).get_next_values()])
 
 def get_markers(seq, sent, lst_targets):
     """Input is like '123 main str' and returns a list of lists
