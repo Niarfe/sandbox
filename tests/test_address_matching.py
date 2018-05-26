@@ -29,3 +29,12 @@ def test_pobox():
 def test_attn():
     sent = "attn john doe"
     assert pext.is_deleg(pext.seq, pext.w(sent)) == True
+
+def test_multiple_markers():
+    marker_lengths = [
+        ("123 main st", 2),
+        ("901 s bolmar st # a", 3),
+        ("123 main st c/o gustav mahler", 4)
+    ]
+    for address, length in marker_lengths:
+        assert len(pext.get_markers(pext.seq, address, ['ADDRESS', 'ATTN'])) == length, "{} should have {} markers".format(address, length)
