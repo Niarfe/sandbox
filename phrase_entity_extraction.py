@@ -158,13 +158,58 @@ def get_markers(seq, sent, lst_targets):
     arr_w = w(sent)
     idx_tail = len(arr_w)
     markers = []
+
     for idx_beg in range(idx_tail):
         for idx_end in range(idx_beg + 1, idx_tail +1):
             next_values = seq.look_ahead(encode_from_word_list(arr_w[idx_beg:idx_end])).get_next_values()
             matches = list(set(next_values) & set(lst_targets) )
             if matches:
                 markers.append([idx_beg, idx_end, idx_end - idx_beg, matches, ' '.join(arr_w[idx_beg:idx_end])])
+
     return markers
+
+def get_best_fit(seq, sent, lst_targets):
+    """Input is like '123 main str' and returns a list of lists
+        RETURNS: a list of list, each list being a candidate and having these values.
+            idx_beg, idx_end, length, matches (ADDRESS etc), sequence
+        ATTN!!  this lowercases stuff, TODO: Generalize this so it doesn't need lowercasing
+    """
+    sent = str(sent).lower().strip()
+    arr_w = w(sent)
+    idx_tail = len(arr_w)
+    markers = []
+
+    for idx_beg in range(idx_tail):
+        for idx_end in range(idx_beg + 1, idx_tail +1):
+            next_values = seq.look_ahead(encode_from_word_list(arr_w[idx_beg:idx_end])).get_next_values()
+            matches = list(set(next_values) & set(lst_targets) )
+            if matches:
+                markers.append([idx_beg, idx_end, idx_end - idx_beg, matches, ' '.join(arr_w[idx_beg:idx_end])])
+
+    greedy_match = {}
+    for target in lst_targets:
+        greedy_match[match] = [match for match in markers if target in match[4]]
+
+    return greedy_match
+
+def return_max_sequence(seq, sent, arr_cands, entity):
+    sent = str(sent).lower().strip()
+    arr_cands = arr_cands #[arr_cand for arr_cand in arr_cands if arr_cand[4] == entity]
+    if not arr_cands:
+        print("NOTHING HERE")
+        return str([encoder(word) for word in w(sent)])
+
+    max_len = 0
+    for cand in arr_cands:
+        if cand[2] > max_len:
+            max_len = cand[2]
+            candidate_address = cand[4]
+
+    candidate_address = candidate_address.upper()
+    if candidate_address != sent.upper():
+        return 'DIFF!! {} | {}'.format(str([encoder(word, trim=True) for word in w(sent)]), candidate_address)
+    else:
+        return candidate_address
 
 
 def return_max_address(seq, sent):
