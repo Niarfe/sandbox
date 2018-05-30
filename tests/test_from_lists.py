@@ -25,6 +25,12 @@ def test_known_bad_addresses():
         assert returned_string.startswith("[")
         assert returned_string.endswith("]")
 
+def test_known_good_pobox_addresses():
+    poboxs = _load_column('data/known_good/known_pobox.csv', 'ADDRESSES')
+
+    for pobox in poboxs:
+        assert pext.return_max_address(pext.seq, pobox) == pobox.upper(), "{} should be a pobox address".format(pobox)
+
 def test_known_good_full_clean_addresses():
     base_addresses = _load_column('data/known_good/full_clean_addresses.csv', 'ADDRESSES')
 

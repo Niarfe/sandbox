@@ -60,6 +60,7 @@ def encoder(word, trim=True):
             ('PRE',         [ pre ]),
             ('DIR',         [ dirs ]),
             ('POB2',        [ r'^box$']),
+            ('POBHC',       [ r'^(hc|rr)$' ]),
             ('DELEG',       [ r'^attn$', r'^attn:$', r'^c\/o$', r'^co$' ]),
             ('POB0',        [ r'^po$', r'^p\.o\.$' ]),
 
@@ -140,8 +141,12 @@ with open('data/address_bases.csv', 'r') as source:
 
 # valid po box
 train_samples = [
-    ("po box 1234", [['POB0'],['POB2'],['DIGIT']]),
-    ("box 999",      [['POB2'],['DIGIT']]),
+    ("po box 1234",     [['POB0'],['POB2'],['DIGIT']]),
+    ("PO BOX E",        [['POB0'], ['POB2'], ['LETTER']]),
+    ("box 999",         [['POB2'],['DIGIT']]),
+    ("PO BOX 1570A",    [['POB0'], ['POB2'], ['NUMS_1AL']]),
+    ("HC 65 BOX 5008",  [['POBHC'],['DIGIT'],['POB2'],['DIGIT']]),  # https://ribbs.usps.gov/cassmassguidelines/CASS%20and%20MASS%20Guidelines/508Version/address_match_sec10_examples.htm
+    ("RR 11 BOX 100",   [['POBHC'],['DIGIT'],['POB2'],['DIGIT']]),   # same ^^
 ]
 for ts, matrix_lst in train_samples:
     matrix_lst.append(['POBOX'])
