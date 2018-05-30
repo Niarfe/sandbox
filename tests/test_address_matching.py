@@ -31,9 +31,6 @@ def test_attn():
     sent = "attn john doe"
     assert pext.is_deleg(pext.seq, pext.w(sent)) == True
 
-def test_suite():
-    sent = "ste c"
-    assert pext.is_suite(pext.seq, pext.w(sent)) == True
 
 def test_multiple_markers():
     marker_lengths = [
@@ -44,20 +41,17 @@ def test_multiple_markers():
     for address, length in marker_lengths:
         assert len(pext.get_markers(pext.seq, address, ['ADDRESS', 'ATTN'])) == length, "{} should have {} markers".format(address, length)
 
-def _load_column(path_file, column):
-    with open(path_file, 'r') as source:
-        csv_file = csv.DictReader(source)
-        return [row[column] for row in csv_file]
 
-
-def test_base_addresses():
-    base_addresses = _load_column('data/address_bases.csv', 'ADDRESSES')
-
-    for base_address in base_addresses:
-        assert pext.return_max_address(pext.seq, base_address) == base_address.upper(), "{} should be a base address".format(base_address)
-
-def test_base_suites():
-    base_suites = _load_column('data/address_suite.csv', 'ADDRESSES')
-
-    for base_suite in base_suites:
-        assert pext.is_suite(pext.seq, pext.w(base_suite.lower())) == True, base_suite.upper()
+def test_incompletes():
+    incompletes = [
+        ("2010 OLD MONTGOMERY HWY SUITE",    "2010 OLD MONTGOMERY HWY"),
+        ("731 PLEASANT GROVE BLVD SUITE",    "731 PLEASANT GROVE BLVD"),
+        ("8690 SIERRA COLLEGE BLVD STE",     "8690 SIERRA COLLEGE BLVD"),
+        ("4000 VIRGINIA BEACH BLVD STE",     "4000 VIRGINIA BEACH BLVD"),
+        ("1300 ERNEST BARRETT PKWY STE",     "1300 ERNEST BARRETT PKWY"),
+        ("12019 ALDINE WESTFIELD RD STE",    "12019 ALDINE WESTFIELD RD"),
+        ("4999 CAROLINA FOREST BLVD UNIT",   "4999 CAROLINA FOREST BLVD"),
+        ("12665 VETERANS MEMORIAL DR SUITE", "12665 VETERANS MEMORIAL DR"),
+    ]
+    for address, expected in incompletes:
+       assert pext.return_max_address(pext.seq, address) == expected.upper(), "Imcomplete address {} was not trimmed".format(address)

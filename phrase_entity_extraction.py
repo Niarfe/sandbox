@@ -2,7 +2,6 @@ import os
 import re
 from hydraseq import Hydraseq
 
-print("Starting script now")
 
 def load_category_from_file(fpath):
     """Take a one word per line file and return a regex for the concatenation '^(w1|w2)$'"""
@@ -22,6 +21,8 @@ def w(str_sentence):
 seq = Hydraseq('input')
 
 ways = load_category_from_file('data/words_way.csv')
+common_street = load_category_from_file('data/words_common_street.csv')
+structures = load_category_from_file('data/words_structures.csv')
 preps = load_category_from_file('data/words_preps.csv')
 conjs = load_category_from_file('data/words_conjs.csv')
 apts = load_category_from_file('data/words_apts.csv')
@@ -31,48 +32,54 @@ arti = load_category_from_file('data/words_arti.csv')
 pre  = load_category_from_file('pre.csv')
 deleg = load_category_from_file('deleg.csv')
 wordways = load_category_from_file('data/words_word_way.csv')
+gfeatures = load_category_from_file('data/words_gfeatures.csv')
 sp_arti = load_category_from_file('data/words_sp_arti.csv')
 sp_way = load_category_from_file('data/words_sp_way.csv')
+sp_pre = load_category_from_file('data/words_sp_pre.csv')
 apts_base = load_category_from_file_no_bookends('data/words_apts.csv')
 # http://maf.directory/zp4/abbrev.html
-print(apts)
+
 def encoder(word, trim=True):
     encodings = [
         # LETTERS ONLY
-        ('ALPHA', [r'^[a-z]+$']),
-            ('LETTER', [r'^[a-z]$']),
-            ('WAY', [ways]),
-            ('WORDWAY', [wordways]),
-            ('APT', [ apts ]),
-            ('ARTI', [arti]),
-            ('PREP', [preps]),
-            ('CONJ', [conjs]),
-            ('SP_ARTI', [sp_arti]),
-            ('SP_WAY',   [sp_way]),
-            ('FARM2MARK', [ r'^fm$' ]),
-            ('PRE',  [ pre ]),
-            ('DIR',  [ dirs ]),
-            ('POB2', [r'^box$']),
-            ('DELEG', [r'^attn$', r'^attn:$', r'^c\/o$', r'^co$' ]),
-            ('POB0', [r'^po$', r'^p\.o\.$']),
+        ('ALPHA',           [r'^[a-z]+$']),
+            ('LETTER',      [r'^[a-z]$']),
+            ('WAY',         [ ways]),
+            ('WORDWAY',     [ wordways ]),
+            ('COMMONST',    [ common_street ]),
+            ('GFEATURE',    [ gfeatures ]),
+            ('STRUCTURE',    [ structures ]),
+            ('APT',         [ apts ]),
+            ('ARTI',        [ arti ]),
+            ('PREP',        [ preps ]),
+            ('CONJ',        [ conjs ]),
+            ('SP_ARTI',     [ sp_arti ]),
+            ('SP_WAY',      [ sp_way ]),
+            ('SP_PRE',      [ sp_pre ]),
+            ('FARM2MARK',   [ r'^fm$' ]),
+            ('PRE',         [ pre ]),
+            ('DIR',         [ dirs ]),
+            ('POB2',        [ r'^box$']),
+            ('DELEG',       [ r'^attn$', r'^attn:$', r'^c\/o$', r'^co$' ]),
+            ('POB0',        [ r'^po$', r'^p\.o\.$' ]),
 
         # NUMBERS ONLY
-        ('DIGIT', [r'^\d+$']),
-        ('DIGDASH', [ r'\d+-\d+$' ]),
-        ('DIGSLASH', [ r'\d+/\d+$' ]),
+        ('DIGIT',           [r'^\d+$']),
+        ('DIGDASH',         [ r'\d+-\d+$' ]),
+        ('DIGSLASH',        [ r'\d+/\d+$' ]),
 
         # MIXED LETTERS AND NUMBERS
-        ('ALNUM', [r'^(\d+[a-z]+|[a-z]+\d+)[\da-z]*$']),
-            ('NUMSTR', [r'^\d+[a-z]+$' ]),
-                ('NTH',    [ nths ]),
-                ('NUMS_1AL', [ r'^\d+[a-z]$' ]),
+        ('ALNUM',           [r'^(\d+[a-z]+|[a-z]+\d+)[\da-z]*$']),
+            ('NUMSTR',      [r'^\d+[a-z]+$' ]),
+                ('NTH',     [ nths ]),
+                ('NUMS_1AL',[ r'^\d+[a-z]$' ]),
             #('APT_NUM', [ r'apt\d+$', r'unit\d+$', r'bldg\d+$', r'ste\d+$', r'suite\d+$', r'ste[a-z]$', r'bldg[a-z]$', r'unit[a-z]$' ]),
                 ('APT_NUM', [ r'^' + apts_base + r'\d+$', r'^' + apts_base + r'[a-z]$' ]),
 
         # SYMBOLS ONLY
-        ('COMMA', [r'^,$']),
-        ('PERIOD', [r'^\.$']),
-        ('POUND', [r'^#$']),
+        ('COMMA',           [r'^,$']),
+        ('PERIOD',          [r'^\.$']),
+        ('POUND',           [r'^#$']),
 
         # LETTERS AND SYMBOLS
 
@@ -120,12 +127,12 @@ with open('data/address_bases.csv', 'r') as source:
         lst_sequence1 = eval(row['SEQUENCE'])
         lst_sequence1.append(['ADDRESS'])
         train_with_provided_list(seq, lst_sequence1)
-        print("ORIGINAL SEQUENCE:> ", lst_sequence1)
+        #print("ORIGINAL SEQUENCE:> ", lst_sequence1)
         for suite_sequence in suite_sequences:
             lst_sequence = eval(row['SEQUENCE'])
             lst_sequence.extend(suite_sequence)
             lst_sequence.append(['ADDRESS'])
-            print("COMBINED SEQUENCE:  ", lst_sequence)
+            #print("COMBINED SEQUENCE:  ", lst_sequence)
             train_with_provided_list(seq, lst_sequence)
 
 # import sys
@@ -220,6 +227,8 @@ def get_best_fit(seq, sent, lst_targets):
         greedy_match[match] = [match for match in markers if target in match[4]]
 
     return greedy_match
+
+
 
 def return_max_sequence(seq, sent, arr_cands, entity):
     sent = str(sent).lower().strip()
