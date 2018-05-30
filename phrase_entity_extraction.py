@@ -10,13 +10,21 @@ def load_category_from_file(fpath):
         ways = [line.strip().lower() for line in source]
     return r'^(' + "|".join(ways) + r')$'
 
+def load_category_from_file_no_bookends(fpath):
+    """Take a one word per line file and return a regex for the concatenation '(w1|w2)', NOTE the missine ^ and $"""
+    with open(fpath, 'r') as source:
+        ways = [line.strip().lower() for line in source]
+    return r'(' + "|".join(ways) + r')'
+
 def w(str_sentence):
-    return re.findall(r"[\w'/-:]+|[,!?;#&]", str_sentence)
+    return re.findall(r"[\w'/\-:]+|[,!?;#&]", str_sentence)
 
 seq = Hydraseq('input')
 
 ways = load_category_from_file('data/words_way.csv')
-apts = load_category_from_file('apts.csv')
+preps = load_category_from_file('data/words_preps.csv')
+conjs = load_category_from_file('data/words_conjs.csv')
+apts = load_category_from_file('data/words_apts.csv')
 nths = load_category_from_file('nth.csv')
 dirs = load_category_from_file('dirs.csv')
 arti = load_category_from_file('data/words_arti.csv')
@@ -24,6 +32,9 @@ pre  = load_category_from_file('pre.csv')
 deleg = load_category_from_file('deleg.csv')
 wordways = load_category_from_file('data/words_word_way.csv')
 sp_arti = load_category_from_file('data/words_sp_arti.csv')
+sp_way = load_category_from_file('data/words_sp_way.csv')
+apts_base = load_category_from_file_no_bookends('data/words_apts.csv')
+# http://maf.directory/zp4/abbrev.html
 print(apts)
 def encoder(word, trim=True):
     encodings = [
@@ -34,7 +45,11 @@ def encoder(word, trim=True):
             ('WORDWAY', [wordways]),
             ('APT', [ apts ]),
             ('ARTI', [arti]),
+            ('PREP', [preps]),
+            ('CONJ', [conjs]),
             ('SP_ARTI', [sp_arti]),
+            ('SP_WAY',   [sp_way]),
+            ('FARM2MARK', [ r'^fm$' ]),
             ('PRE',  [ pre ]),
             ('DIR',  [ dirs ]),
             ('POB2', [r'^box$']),
@@ -43,13 +58,16 @@ def encoder(word, trim=True):
 
         # NUMBERS ONLY
         ('DIGIT', [r'^\d+$']),
+        ('DIGDASH', [ r'\d+-\d+$' ]),
+        ('DIGSLASH', [ r'\d+/\d+$' ]),
 
         # MIXED LETTERS AND NUMBERS
         ('ALNUM', [r'^(\d+[a-z]+|[a-z]+\d+)[\da-z]*$']),
             ('NUMSTR', [r'^\d+[a-z]+$' ]),
                 ('NTH',    [ nths ]),
                 ('NUMS_1AL', [ r'^\d+[a-z]$' ]),
-            ('APT_NUM', [ r'apt\d+$', r'unit\d+$', r'bldg\d+$', r'ste\d+$', r'suite\d+$']),
+            #('APT_NUM', [ r'apt\d+$', r'unit\d+$', r'bldg\d+$', r'ste\d+$', r'suite\d+$', r'ste[a-z]$', r'bldg[a-z]$', r'unit[a-z]$' ]),
+                ('APT_NUM', [ r'^' + apts_base + r'\d+$', r'^' + apts_base + r'[a-z]$' ]),
 
         # SYMBOLS ONLY
         ('COMMA', [r'^,$']),
@@ -69,7 +87,7 @@ def encoder(word, trim=True):
     if not trim:
         return encoding
     else:
-        if any([key in ['SP_ARTI','LETTER', 'WORDWAY', 'WAY', 'APT', 'ARTI', 'PRE', 'DIR', 'DELEG', 'POB2', 'POB0'] for key in encoding]) and 'ALPHA' in encoding:
+        if any([key in ['SP_ARTI','LETTER', 'WORDWAY', 'WAY', 'APT', 'ARTI', 'PRE', 'DIR', 'DELEG', 'POB2', 'POB0', 'FARM2MARK'] for key in encoding]) and 'ALPHA' in encoding:
             encoding.remove('ALPHA')  # Redudant category level if we have probable meaning
         if any([key in ['NUMS_1AL', 'NUMSTR', 'NTH'] for key in encoding]) and 'ALNUM' in encoding:
             encoding.remove('ALNUM')  # Redudant category level if we have probable meaning
@@ -87,20 +105,31 @@ def train_with_provided_list(seq, matrix_lst):
 
 
 import csv
-with open('data/address_bases.csv', 'r') as source:
-    csv_file = csv.DictReader(source)
-    for row in csv_file:
-        lst_sequence = eval(row['SEQUENCE'])
-        lst_sequence.append(['ADDRESS'])
-        train_with_provided_list(seq, lst_sequence)
-
-
+suite_sequences = []
 with open('data/address_suite.csv', 'r') as source:
     csv_file = csv.DictReader(source)
     for row in csv_file:
         lst_sequence = eval(row['SEQUENCE'])
-        lst_sequence.append(['SUITE'])
-        train_with_provided_list(seq, lst_sequence)
+        suite_sequences.append(lst_sequence)
+        # lst_sequence.append(['SUITE'])
+        # train_with_provided_list(seq, lst_sequence)
+
+with open('data/address_bases.csv', 'r') as source:
+    csv_file = csv.DictReader(source)
+    for row in csv_file:
+        lst_sequence1 = eval(row['SEQUENCE'])
+        lst_sequence1.append(['ADDRESS'])
+        train_with_provided_list(seq, lst_sequence1)
+        print("ORIGINAL SEQUENCE:> ", lst_sequence1)
+        for suite_sequence in suite_sequences:
+            lst_sequence = eval(row['SEQUENCE'])
+            lst_sequence.extend(suite_sequence)
+            lst_sequence.append(['ADDRESS'])
+            print("COMBINED SEQUENCE:  ", lst_sequence)
+            train_with_provided_list(seq, lst_sequence)
+
+# import sys
+# sys.exit(0)
 
 # valid po box
 train_samples = [
@@ -207,16 +236,17 @@ def return_max_sequence(seq, sent, arr_cands, entity):
 
     candidate_address = candidate_address.upper()
     if candidate_address != sent.upper():
-        return 'DIFF!! {} | {}'.format(str([encoder(word, trim=True) for word in w(sent)]), candidate_address)
+        return '{}'.format(str([encoder(word, trim=True) for word in w(sent)]))
     else:
         return candidate_address
 
 
 def return_max_address(seq, sent):
     sent = str(sent).lower().strip()
-    arr_cands = get_markers(seq, sent, ['ADDRESS'])
+    sent = re.sub(r'\s+', ' ', sent)
+    arr_cands = get_markers(seq, sent, ['ADDRESS', 'POBOX'])
     if not arr_cands:
-        return str([encoder(word) for word in w(sent)])
+        return str(encode_from_word_list(w(sent)))
 
     max_len = 0
     for cand in arr_cands:
@@ -225,8 +255,8 @@ def return_max_address(seq, sent):
             candidate_address = cand[4]
 
     candidate_address = candidate_address.upper()
-    if candidate_address != sent.upper():
-        return 'DIFF!! {} | {}'.format(str([encoder(word, trim=True) for word in w(sent)]), candidate_address)
+    if False: #candidate_address != sent.upper():
+        return '{}'.format(str([encoder(word, trim=True) for word in w(sent)]))
     else:
         return candidate_address
 
@@ -234,9 +264,9 @@ def return_max_address(seq, sent):
 if __name__ == "__main__":
     #################################################################################
     import pandas as pd
-    df = pd.read_csv('originals.csv')
+    df = pd.read_csv('data/badboys.csv')
     df_addresses = df[['ACCT_STREET_ADDR']]
     df_addresses.drop_duplicates(keep='first', inplace=True)
     df_addresses['NEW ADDRESS'] = df_addresses['ACCT_STREET_ADDR'].apply(lambda x: return_max_address(seq, x))
-    df_addresses.to_csv('processed_addresses.csv')
-    os.system("open 'processed_addresses.csv'")
+    df_addresses.to_csv('processed.csv')
+    os.system("open 'processed.csv'")

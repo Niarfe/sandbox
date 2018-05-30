@@ -1,12 +1,23 @@
 ADDRESSES,SEQUENCE
-STE C,"[['APT'], ['LETTER']]"
-STE 141,"[['APT'], ['DIGIT']]"
 B102,[['ALNUM']]
-APT F15,"[['APT'], ['ALNUM']]"
-LOT 31,"[['APT'], ['DIGIT']]"
-# 2,"[['POUND'], ['DIGIT']]"
-# b,"[['POUND'], ['LETTER']]"
 1300,[['DIGIT']]
-SPC 36,"[['APT'], ['DIGIT']]"
-FL 2,"[['APT'], ['DIGIT']]"
+13A,[['NUMS_1AL']]
+E,[['LETTER']]
+23-24,[['DIGDASH']]
+E,[['DIR']]
+STEC,[['APT_NUM']]
+STE ABC,"[['APT'], ['ALPHA']]"
+APT F15,"[['APT'], ['ALNUM']]"
+STE 141,"[['APT'], ['DIGIT']]"
+STE 141 142,"[['APT'], ['DIGIT'],['DIGIT']]"
+UNIT B 1,"[['APT'], ['LETTER'],['DIGIT']]"
+BLDG 2 UNIT 202,"[['APT'],['DIGIT'],['APT'],['DIGIT']]"
+STE 141-142,"[['APT'], ['DIGDASH']]"
+STE C,"[['APT'], ['LETTER']]"
 APT 3K,"[['APT'], ['NUMS_1AL']]"
+# ABC,"[['POUND'], ['ALPHA']]"
+# b,"[['POUND'], ['ALNUM']]"
+# 2,"[['POUND'], ['DIGIT']]"
+# 2-3,"[['POUND'], ['DIGDASH']]"
+# b,"[['POUND'], ['LETTER']]"
+# 100A,"[['POUND'],['NUMS_1AL']]"
