@@ -42,3 +42,9 @@ def test_known_good_full_clean_addresses():
     for base_address in base_addresses:
         assert pext.return_max_address(pext.seq, base_address) == base_address.upper(), '{},"{}"'.format(base_address.upper(), pext.encode_from_word_list(pext.w(base_address.lower())))
 
+def test_eighty_k_good_street_and_po_samples():
+    base_addresses = _load_column('data/known_good/eighty_k_good_street_and_po_samples.csv', 'ADDRESSES')
+
+    for base_address in base_addresses:
+        assert pext.return_max_address(pext.seq, base_address) == base_address.upper(), '{},"{}"'.format(base_address.upper(), pext.encode_from_word_list(pext.w(base_address.lower())))
+

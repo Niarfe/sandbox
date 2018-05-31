@@ -7,6 +7,7 @@ E,[['LETTER']]
 23-24,[['DIGDASH']]
 E,[['DIR']]
 STEC,[['APT_NUM']]
+#177,[['POUNDDIG']]
 14TH FL,"[['NTH'], ['APT']]"
 STE ABC,"[['APT'], ['ALPHA']]"
 APT F15,"[['APT'], ['ALNUM']]"

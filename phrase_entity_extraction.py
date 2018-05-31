@@ -16,7 +16,7 @@ def load_category_from_file_no_bookends(fpath):
     return r'(' + "|".join(ways) + r')'
 
 def w(str_sentence):
-    return re.findall(r"[\w'/\-:]+|[,!?#&]", str_sentence)
+    return re.findall(r"[\w'/\-:#]+|[,!?&]", str_sentence)
 
 seq = Hydraseq('input')
 negatives = load_category_from_file('data/words_non_address.csv')
@@ -36,6 +36,7 @@ gfeatures = load_category_from_file('data/words_gfeatures.csv')
 sp_arti = load_category_from_file('data/words_sp_arti.csv')
 sp_way = load_category_from_file('data/words_sp_way.csv')
 sp_pre = load_category_from_file('data/words_sp_pre.csv')
+word_numbers = load_category_from_file('data/words_numbers.csv')
 apts_base = load_category_from_file_no_bookends('data/words_apts.csv')
 # http://maf.directory/zp4/abbrev.html
 
@@ -44,6 +45,8 @@ def encoder(word, trim=True):
         # LETTERS ONLY
         ('ALPHA',           [r'^[a-z\'A-Z]+$']),
             ('LETTER',      [r'^[a-zA-Z]$']),
+            ('P',           [r'^p$']),
+            ('O',           [r'^o$']),
             ('TH',          [r'^th$' ]),
             ('WAY',         [ ways]),
             ('WORDWAY',     [ wordways ]),
@@ -62,6 +65,8 @@ def encoder(word, trim=True):
             ('DIR',         [ dirs ]),
             ('POB2',        [ r'^box$']),
             ('POBHC',       [ r'^(hc|rr)$' ]),
+            ('POBOX1',       [ r'^pobox$' ]),
+            ('DRAWER',       [ r'^drawer$' ]),
             ('DELEG',       [ r'^attn$', r'^attn:$', r'^c\/o$', r'^co$' ]),
             ('POB0',        [ r'^po$', r'^p\.o\.$' ]),
             ('NEGATIVE',        [ negatives ]),
@@ -71,8 +76,10 @@ def encoder(word, trim=True):
         ('DIGSLASH',        [ r'\d+/\d+$' ]),
 
         # MIXED LETTERS AND NUMBERS
+        ('ADR_HEAD',        [r'^\d+$', word_numbers, r'^[nsew]\d+', r'^#\d+' ]),
         ('ALNUM',           [r'^(\d+[a-z]+|[a-z]+\d+)[\da-z]*$']),
             ('DIGDASHAL',   [r'^\d+-[a-z]+$'] ),
+            ('BOXNUM',      [r'^box\d+$']),
             ('ALDASHDIG',   [r'^[a-z]+-\d+$'] ),
             ('NUMSTR',      [r'^\d+[a-z]+$' ]),
                 ('NTH',     [ nths ]),
@@ -88,6 +95,7 @@ def encoder(word, trim=True):
         # LETTERS AND SYMBOLS
 
         # NUMBERS AND SYMBOLS
+        ('POUNDDIG',           [r'^#\d+$']),
 
         # INTERNAL MARKERS
         ('ADDRESS', [r'^:adr$']),
@@ -98,7 +106,7 @@ def encoder(word, trim=True):
     if not trim:
         return encoding
     else:
-        if any([key in ['NEGATIVE', 'TH','SP_ARTI','LETTER', 'WORDWAY', 'WAY', 'APT', 'ARTI', 'PRE', 'DIR', 'DELEG', 'POB2', 'POB0', 'FARM2MARK'] for key in encoding]) and 'ALPHA' in encoding:
+        if any([key in ['P','O','NEGATIVE', 'TH','SP_ARTI','LETTER', 'WORDWAY', 'WAY', 'APT', 'ARTI', 'PRE', 'DIR', 'DELEG', 'POB2', 'POB0', 'FARM2MARK'] for key in encoding]) and 'ALPHA' in encoding:
             encoding.remove('ALPHA')  # Redudant category level if we have probable meaning
         if any([key in ['NUMS_1AL', 'NUMSTR', 'NTH'] for key in encoding]) and 'ALNUM' in encoding:
             encoding.remove('ALNUM')  # Redudant category level if we have probable meaning
@@ -145,8 +153,14 @@ with open('data/address_bases.csv', 'r') as source:
 # valid po box
 train_samples = [
     ("po box 1234",     [['POB0'],['POB2'],['DIGIT']]),
+    ("po box1234",     [['POB0'], ['BOXNUM']]),
+    ("po drawer 1234",     [['POB0'],['DRAWER'],['DIGIT']]),
+    ("po box #1234",     [['POB0'],['POB2'],['POUNDDIG']]),
     ("PO BOX E",        [['POB0'], ['POB2'], ['LETTER']]),
     ("box 999",         [['POB2'],['DIGIT']]),
+    ("pobox 999",         [['POBOX1'],['DIGIT']]),
+    ("p o box 123",     [['P'], ['O'], ['POB2'], ['DIGIT']]),
+    ("p o drawer 123",     [['P'], ['O'], ['DRAWER'], ['DIGIT']]),
     ("PO BOX 1570A",    [['POB0'], ['POB2'], ['NUMS_1AL']]),
     ("HC 65 BOX 5008",  [['POBHC'],['DIGIT'],['POB2'],['DIGIT']]),  # https://ribbs.usps.gov/cassmassguidelines/CASS%20and%20MASS%20Guidelines/508Version/address_match_sec10_examples.htm
     ("RR 11 BOX 100",   [['POBHC'],['DIGIT'],['POB2'],['DIGIT']]),   # same ^^
