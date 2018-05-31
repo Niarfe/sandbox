@@ -130,6 +130,7 @@ with open('data/address_suite.csv', 'r') as source:
     csv_file = csv.DictReader(source)
     for row in csv_file:
         lst_sequence = eval(row['SEQUENCE'])
+        train_with_provided_list(seq, lst_sequence + [['SUITE']])
         suite_sequences.append(lst_sequence)
 
 with open('data/address_bases.csv', 'r') as source:
@@ -138,12 +139,12 @@ with open('data/address_bases.csv', 'r') as source:
         lst_sequence = eval(row['SEQUENCE'])
         #print("==PLAIN")
         train_with_provided_list(seq, lst_sequence + [['ADDRESS']])  # THIS IS THE PLAIN ADDRESS SEQUENCE
-        for suite_sequence in suite_sequences:
-            #print("==== >>>>")
-            train_with_provided_list(seq, lst_sequence + suite_sequence + [['ADDRESS']])
-        for suite_sequence in suite_sequences:
-            #print("<<<< ====")
-            train_with_provided_list(seq, suite_sequence + lst_sequence + [['ADDRESS']])
+        # for suite_sequence in suite_sequences:
+        #     #print("==== >>>>")
+        #     train_with_provided_list(seq, lst_sequence + suite_sequence + [['ADDRESS']])
+        # for suite_sequence in suite_sequences:
+        #     #print("<<<< ====")
+        #     train_with_provided_list(seq, suite_sequence + lst_sequence + [['ADDRESS']])
             
 # import sys
 # sys.exit(0)
