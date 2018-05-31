@@ -45,8 +45,8 @@ def encoder(word, trim=True):
         # LETTERS ONLY
         ('ALPHA',           [r'^[a-z\'A-Z]+$']),
             ('LETTER',      [r'^[a-zA-Z]$']),
-            ('P',           [r'^p$']),
-            ('O',           [r'^o$']),
+            ('POST',        [r'^p$', r'^post$' ]),
+            ('OFFICE',      [r'^o$', r'^office$' ]),
             ('TH',          [r'^th$' ]),
             ('WAY',         [ ways]),
             ('WORDWAY',     [ wordways ]),
@@ -76,7 +76,7 @@ def encoder(word, trim=True):
         ('DIGSLASH',        [ r'\d+/\d+$' ]),
 
         # MIXED LETTERS AND NUMBERS
-        ('ADR_HEAD',        [r'^\d+$', word_numbers, r'^[nsew]\d+', r'^#\d+' ]),
+        ('ADR_HEAD',        [r'^\d+$', word_numbers, r'^[nsew]\d+$', r'^#\d+$', r'\d+-\d+$' ]),
         ('ALNUM',           [r'^(\d+[a-z]+|[a-z]+\d+)[\da-z]*$']),
             ('DIGDASHAL',   [r'^\d+-[a-z]+$'] ),
             ('BOXNUM',      [r'^box\d+$']),
@@ -120,6 +120,7 @@ def encoder(word, trim=True):
 # THOU SHALL NOT SEQUENCE THREE ALPHAS IN A ROW!
 def train_with_provided_list(seq, matrix_lst):
     """matrix list means [['DIGIT'],['ALPHA'],['WAY']] for example"""
+    #print(matrix_lst)
     return seq.insert(matrix_lst, is_learning=True).get_next_values()
 
 
@@ -130,37 +131,35 @@ with open('data/address_suite.csv', 'r') as source:
     for row in csv_file:
         lst_sequence = eval(row['SEQUENCE'])
         suite_sequences.append(lst_sequence)
-        # lst_sequence.append(['SUITE'])
-        # train_with_provided_list(seq, lst_sequence)
 
 with open('data/address_bases.csv', 'r') as source:
     csv_file = csv.DictReader(source)
     for row in csv_file:
-        lst_sequence1 = eval(row['SEQUENCE'])
-        lst_sequence1.append(['ADDRESS'])
-        train_with_provided_list(seq, lst_sequence1)
-        #print("ORIGINAL SEQUENCE:> ", lst_sequence1)
+        lst_sequence = eval(row['SEQUENCE'])
+        #print("==PLAIN")
+        train_with_provided_list(seq, lst_sequence + [['ADDRESS']])  # THIS IS THE PLAIN ADDRESS SEQUENCE
         for suite_sequence in suite_sequences:
-            lst_sequence = eval(row['SEQUENCE'])
-            lst_sequence.extend(suite_sequence)
-            lst_sequence.append(['ADDRESS'])
-            #print("COMBINED SEQUENCE:  ", lst_sequence)
-            train_with_provided_list(seq, lst_sequence)
-
+            #print("==== >>>>")
+            train_with_provided_list(seq, lst_sequence + suite_sequence + [['ADDRESS']])
+        for suite_sequence in suite_sequences:
+            #print("<<<< ====")
+            train_with_provided_list(seq, suite_sequence + lst_sequence + [['ADDRESS']])
+            
 # import sys
 # sys.exit(0)
 
 # valid po box
 train_samples = [
     ("po box 1234",     [['POB0'],['POB2'],['DIGIT']]),
-    ("po box1234",     [['POB0'], ['BOXNUM']]),
-    ("po drawer 1234",     [['POB0'],['DRAWER'],['DIGIT']]),
-    ("po box #1234",     [['POB0'],['POB2'],['POUNDDIG']]),
+    ("po box1234",      [['POB0'], ['BOXNUM']]),
+    ("po drawer 1234",  [['POB0'],['DRAWER'],['DIGIT']]),
+    ("po box #1234",    [['POB0'],['POB2'],['POUNDDIG']]),
     ("PO BOX E",        [['POB0'], ['POB2'], ['LETTER']]),
     ("box 999",         [['POB2'],['DIGIT']]),
-    ("pobox 999",         [['POBOX1'],['DIGIT']]),
-    ("p o box 123",     [['P'], ['O'], ['POB2'], ['DIGIT']]),
-    ("p o drawer 123",     [['P'], ['O'], ['DRAWER'], ['DIGIT']]),
+    ("post box 999",    [['POST'],['POB2'],['DIGIT']]),
+    ("pobox 999",       [['POBOX1'],['DIGIT']]),
+    ("p o box 123",     [['POST'], ['OFFICE'], ['POB2'], ['DIGIT']]),
+    ("p o drawer 123",  [['POST'], ['OFFICE'], ['DRAWER'], ['DIGIT']]),
     ("PO BOX 1570A",    [['POB0'], ['POB2'], ['NUMS_1AL']]),
     ("HC 65 BOX 5008",  [['POBHC'],['DIGIT'],['POB2'],['DIGIT']]),  # https://ribbs.usps.gov/cassmassguidelines/CASS%20and%20MASS%20Guidelines/508Version/address_match_sec10_examples.htm
     ("RR 11 BOX 100",   [['POBHC'],['DIGIT'],['POB2'],['DIGIT']]),   # same ^^

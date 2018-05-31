@@ -2,10 +2,10 @@ ADDRESSES,SEQUENCE
 B102,[['ALNUM']]
 1300,[['DIGIT']]
 2 SOUTH,"[['DIGIT'], ['DIR']]"
+SUITE 2 SOUTH,"[['APT'], ['DIGIT'], ['DIR']]"
 13A,[['NUMS_1AL']]
-E,[['LETTER']]
 23-24,[['DIGDASH']]
-E,[['DIR']]
+E,[['LETTER']]
 STEC,[['APT_NUM']]
 #177,[['POUNDDIG']]
 14TH FL,"[['NTH'], ['APT']]"
