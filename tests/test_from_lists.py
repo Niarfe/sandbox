@@ -10,6 +10,11 @@ def _load_column(path_file, column):
         csv_file = csv.DictReader(source)
         return [row[column] for row in csv_file]
 
+def _load_csv_file(path_file):
+    with open(path_file, 'r') as source:
+        csv_file = csv.DictReader(source)
+    return csv_file
+
 
 def test_base_addresses():
     base_addresses = _load_column('data/address_bases.csv', 'ADDRESSES')
@@ -35,5 +40,5 @@ def test_known_good_full_clean_addresses():
     base_addresses = _load_column('data/known_good/full_clean_addresses.csv', 'ADDRESSES')
 
     for base_address in base_addresses:
-        assert pext.return_max_address(pext.seq, base_address) == base_address.upper(), "{} should be a base address".format(base_address)
+        assert pext.return_max_address(pext.seq, base_address) == base_address.upper(), '{},"{}"'.format(base_address.upper(), pext.encode_from_word_list(pext.w(base_address.lower())))
 

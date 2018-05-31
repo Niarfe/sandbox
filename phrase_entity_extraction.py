@@ -16,10 +16,10 @@ def load_category_from_file_no_bookends(fpath):
     return r'(' + "|".join(ways) + r')'
 
 def w(str_sentence):
-    return re.findall(r"[\w'/\-:]+|[,!?;#&]", str_sentence)
+    return re.findall(r"[\w'/\-:]+|[,!?#&]", str_sentence)
 
 seq = Hydraseq('input')
-
+negatives = load_category_from_file('data/words_non_address.csv')
 ways = load_category_from_file('data/words_way.csv')
 common_street = load_category_from_file('data/words_common_street.csv')
 structures = load_category_from_file('data/words_structures.csv')
@@ -42,8 +42,9 @@ apts_base = load_category_from_file_no_bookends('data/words_apts.csv')
 def encoder(word, trim=True):
     encodings = [
         # LETTERS ONLY
-        ('ALPHA',           [r'^[a-z]+$']),
-            ('LETTER',      [r'^[a-z]$']),
+        ('ALPHA',           [r'^[a-z\'A-Z]+$']),
+            ('LETTER',      [r'^[a-zA-Z]$']),
+            ('TH',          [r'^th$' ]),
             ('WAY',         [ ways]),
             ('WORDWAY',     [ wordways ]),
             ('COMMONST',    [ common_street ]),
@@ -63,7 +64,7 @@ def encoder(word, trim=True):
             ('POBHC',       [ r'^(hc|rr)$' ]),
             ('DELEG',       [ r'^attn$', r'^attn:$', r'^c\/o$', r'^co$' ]),
             ('POB0',        [ r'^po$', r'^p\.o\.$' ]),
-
+            ('NEGATIVE',        [ negatives ]),
         # NUMBERS ONLY
         ('DIGIT',           [r'^\d+$']),
         ('DIGDASH',         [ r'\d+-\d+$' ]),
@@ -71,6 +72,8 @@ def encoder(word, trim=True):
 
         # MIXED LETTERS AND NUMBERS
         ('ALNUM',           [r'^(\d+[a-z]+|[a-z]+\d+)[\da-z]*$']),
+            ('DIGDASHAL',   [r'^\d+-[a-z]+$'] ),
+            ('ALDASHDIG',   [r'^[a-z]+-\d+$'] ),
             ('NUMSTR',      [r'^\d+[a-z]+$' ]),
                 ('NTH',     [ nths ]),
                 ('NUMS_1AL',[ r'^\d+[a-z]$' ]),
@@ -95,7 +98,7 @@ def encoder(word, trim=True):
     if not trim:
         return encoding
     else:
-        if any([key in ['SP_ARTI','LETTER', 'WORDWAY', 'WAY', 'APT', 'ARTI', 'PRE', 'DIR', 'DELEG', 'POB2', 'POB0', 'FARM2MARK'] for key in encoding]) and 'ALPHA' in encoding:
+        if any([key in ['NEGATIVE', 'TH','SP_ARTI','LETTER', 'WORDWAY', 'WAY', 'APT', 'ARTI', 'PRE', 'DIR', 'DELEG', 'POB2', 'POB0', 'FARM2MARK'] for key in encoding]) and 'ALPHA' in encoding:
             encoding.remove('ALPHA')  # Redudant category level if we have probable meaning
         if any([key in ['NUMS_1AL', 'NUMSTR', 'NTH'] for key in encoding]) and 'ALNUM' in encoding:
             encoding.remove('ALNUM')  # Redudant category level if we have probable meaning
