@@ -292,6 +292,72 @@ def return_max_address(seq, sent):
         return candidate_address
 
 
+### %% NEW SECOND LEVEL
+def get_interpretation(seq, arr_words, arr_search_keys):
+    """INPUT: ['123', 'main']"""
+    t1_encoded = encode_from_word_list(arr_words)
+    #print("encoded: " ,t1_encoded)
+    seq.look_ahead(t1_encoded)
+    next_values = seq.get_next_values()
+    #print("returning ", next_values)
+    return [search_key for search_key in arr_search_keys if search_key in next_values]
+
+def decompose_into_dictionary_words(domain, _seq, types):
+    last_length = [-1] * len(domain)
+    last_interp = ['']*len(domain)
+    #print("Length Domain: ", len(domain))
+    for i in range(len(domain)):
+        #print("INPUT TO GET_INTERPRETATION: ", domain[:i + 1])
+        inter1 = get_interpretation(_seq, domain[:i + 1], types)
+        if any([ret_type in types for ret_type in inter1]):
+            #print("HIT A")
+            last_interp[i] = [hit for hit in inter1 if hit in types]
+            last_length[i] = i + 1
+            
+        if last_length[i] == -1:
+            for j in range(i):
+                inter2 = get_interpretation(_seq, domain[j + 1:i + 1], types)
+                #print("SUB INPUT for INTERPRET: ", domain[j+1:i+1], inter2, last_length[j])
+                #if last_length[j] != -1 and any([ret_type in types for ret_type in inter2]):
+                if any([ret_type in types for ret_type in inter2]):
+                    #print('HIT B')
+                    last_interp[i] = [hit for hit in inter2 if hit in types]
+                    last_length[i] = i - j
+                    break
+        #print("last_length: ", last_length)
+        #print("last_interp: ", last_interp)
+    #return last_length, last_interp
+    #print("last_length: ", last_length)
+    #print("last_interp: ", last_interp)
+    #print("BEGIN DECOMPOSITON PHASE")
+    decompositions = []
+    components = []
+    #if last_length[-1] != -1:
+    idx = len(domain) - 1
+    while idx >= 0:
+        #print("idx: ", idx)
+        decompositions.append(last_interp[idx]) #domain[idx + 1 - last_length[idx]:idx + 1])
+        components.append((last_interp[idx], " ".join(domain[idx + 1 - last_length[idx]:idx + 1])))
+        if last_length[idx] == -1:
+            idx -= 1
+            continue
+        idx -= last_length[idx]
+    decompositions = decompositions[::-1]
+    components = components[::-1]
+    print(decompositions)
+    return last_length, last_interp, decompositions, components   
+
+
+def return_max_address2(seq, sent):
+    kinds = ['ADDRESS', 'POBOX', 'SUITE']
+    decomposition = decompose_into_dictionary_words(w(sent.lower()), seq, kinds)
+    found_tuples = decomposition[3]
+    max_address = []
+    for kindof, value in found_tuples:
+        if kindof[0] in kinds:
+            max_address.append(value)
+    return " ".join(max_address)
+
 if __name__ == "__main__":
     #################################################################################
     import pandas as pd

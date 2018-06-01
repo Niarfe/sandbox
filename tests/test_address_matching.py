@@ -8,7 +8,7 @@ import phrase_entity_extraction as pext
 def test_markers():
     marker_lengths = [
         ("123 main st", 2),
-        ("901 s bolmar st # a", 3),
+        ("901 s bolmar st # a", 2),
     ]
     for address, length in marker_lengths:
         assert len(pext.get_markers(pext.seq, address, ['ADDRESS'])) == length, "{} should have {} markers".format(address, length)
@@ -21,7 +21,7 @@ def test_basics():
     ]
 
     for address in valid_addresses:
-        assert pext.return_max_address(pext.seq, address) == address.upper(), address
+        assert pext.return_max_address2(pext.seq, address) == address.lower(), address
 
 def test_pobox():
     sent = "po box 7001"
