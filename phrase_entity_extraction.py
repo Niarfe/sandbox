@@ -400,9 +400,9 @@ def return_best_fit(seq, sent):
             else:
                 idx -= 1
         return best_fit
-    markers = get_markers(seq, sent, ['ADDRESS', 'POBOX', 'SUITE', 'ATTN'])
+    markers = get_markers(seq, sent, ['ADDRESS', 'POBOX', 'SUITE', 'ATTN','_DIR_'])
     best_fit = []
-    for nugget in ['POBOX', 'ADDRESS', 'ATTN', 'SUITE']:
+    for nugget in ['POBOX', 'ADDRESS', 'ATTN', 'SUITE','_DIR_']:
         best_fit = add_next(markers, best_fit, nugget)
 
     best_fit.sort(key=lambda x: int(x[0]))
@@ -413,7 +413,7 @@ def return_max_address3(seq, sent):
     results = return_best_fit(seq,sent)
     addresses = []
     for result in results:
-        if result[3][0] in ['ADDRESS', 'SUITE']:
+        if result[3][0] in ['ADDRESS', 'SUITE','_DIR_']:
             addresses.append(result[4])
     if not addresses:
         if result[3][0] in ['POBOX']:
