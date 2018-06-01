@@ -145,7 +145,7 @@ with open('data/address_bases.csv', 'r') as source:
         # for suite_sequence in suite_sequences:
         #     #print("<<<< ====")
         #     train_with_provided_list(seq, suite_sequence + lst_sequence + [['ADDRESS']])
-            
+
 # import sys
 # sys.exit(0)
 
@@ -302,6 +302,23 @@ def get_interpretation(seq, arr_words, arr_search_keys):
     #print("returning ", next_values)
     return [search_key for search_key in arr_search_keys if search_key in next_values]
 
+
+def index_tail(lst):
+    """Return the 0 based index of last element in lst"""
+    return len(lst) - 1
+def validate_back_jump(last_length, idx):
+    """Validate jumping back to start of sequence, check if any other back sequence is in the way"""
+    current_range = last_length[idx]
+    while current_range > 1:
+        #print("index: ", idx, " range: ", current_range, " last ", last_length[idx-1], " <? ", current_range -1)
+        if last_length[idx-1] <= current_range - 1:
+            current_range -= 1
+            idx -= 1
+            continue
+        else:
+            return False
+    return True
+
 def decompose_into_dictionary_words(domain, _seq, types):
     last_length = [-1] * len(domain)
     last_interp = ['']*len(domain)
@@ -313,7 +330,7 @@ def decompose_into_dictionary_words(domain, _seq, types):
             #print("HIT A")
             last_interp[i] = [hit for hit in inter1 if hit in types]
             last_length[i] = i + 1
-            
+
         if last_length[i] == -1:
             for j in range(i):
                 inter2 = get_interpretation(_seq, domain[j + 1:i + 1], types)
@@ -332,20 +349,23 @@ def decompose_into_dictionary_words(domain, _seq, types):
     #print("BEGIN DECOMPOSITON PHASE")
     decompositions = []
     components = []
-    #if last_length[-1] != -1:
-    idx = len(domain) - 1
+    idx = index_tail(domain)
     while idx >= 0:
         #print("idx: ", idx)
-        decompositions.append(last_interp[idx]) #domain[idx + 1 - last_length[idx]:idx + 1])
-        components.append((last_interp[idx], " ".join(domain[idx + 1 - last_length[idx]:idx + 1])))
+        if validate_back_jump(last_length, idx):
+            decompositions.append(last_interp[idx])
+            components.append((last_interp[idx], " ".join(domain[idx + 1 - last_length[idx]:idx + 1])))
         if last_length[idx] == -1:
             idx -= 1
             continue
-        idx -= last_length[idx]
+        if validate_back_jump(last_length, idx):
+            idx -= last_length[idx]
+        else:
+            idx -= 1
     decompositions = decompositions[::-1]
     components = components[::-1]
     #print(decompositions)
-    return last_length, last_interp, decompositions, components   
+    return last_length, last_interp, decompositions, components
 
 
 def return_max_address2(seq, sent):
@@ -358,6 +378,47 @@ def return_max_address2(seq, sent):
             max_address.append(value)
     return " ".join(max_address).upper()
 
+### SUPER HYDRA ACTION!
+def return_best_fit(seq, sent):
+    def get_sorted_entity(_markers, entity):
+        entities = [arr for arr in _markers if arr[3][0] == entity]
+        entities.sort(key=lambda x: int(x[2]))
+        return entities
+    def entitys_overlap(ent1, ent2):
+        if ent1[1] <= ent2[0] or ent2[1] <= ent1[0]:
+            return False
+        else:
+            return True
+    def add_next(markers, best_fit, entity):
+        suites = get_sorted_entity(markers, entity)
+        idx = len(suites) - 1
+        while idx >= 0:
+            if not any([entitys_overlap(item, suites[idx]) for item in best_fit]):
+                best_fit.append(suites[idx])
+                break
+            else:
+                idx -= 1
+        return best_fit
+    markers = get_markers(seq, sent, ['ADDRESS', 'POBOX', 'SUITE', 'ATTN'])
+    best_fit = []
+    for nugget in ['POBOX', 'ADDRESS', 'ATTN', 'SUITE']:
+        best_fit = add_next(markers, best_fit, nugget)
+
+    best_fit.sort(key=lambda x: int(x[0]))
+    return best_fit
+
+
+def return_max_address3(seq, sent):
+    results = return_best_fit(seq,sent)
+    addresses = []
+    for result in results:
+        if result[3][0] in ['ADDRESS', 'SUITE']:
+            addresses.append(result[4])
+    if not addresses:
+        if result[3][0] in ['POBOX']:
+            addresses.append(result[4])
+    address = " ".join(addresses)
+    return address.upper()
 
 if __name__ == "__main__":
     #################################################################################

@@ -21,7 +21,7 @@ def test_basics():
     ]
 
     for address in valid_addresses:
-        assert pext.return_max_address2(pext.seq, address) == address.upper(), address
+        assert pext.return_max_address3(pext.seq, address) == address.upper(), address
 
 def test_pobox():
     sent = "po box 7001"
@@ -54,4 +54,4 @@ def test_incompletes():
         ("12665 VETERANS MEMORIAL DR SUITE", "12665 VETERANS MEMORIAL DR"),
     ]
     for address, expected in incompletes:
-       assert pext.return_max_address(pext.seq, address) == expected.upper(), "Imcomplete address {} was not trimmed".format(address)
+       assert pext.return_max_address3(pext.seq, address) == expected.upper(), "Imcomplete address {} was not trimmed".format(address)
