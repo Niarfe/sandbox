@@ -84,7 +84,6 @@ def encoder(word, trim=True):
             ('NUMSTR',      [r'^\d+[a-z]+$' ]),
                 ('NTH',     [ nths ]),
                 ('NUMS_1AL',[ r'^\d+[a-z]$' ]),
-            #('APT_NUM', [ r'apt\d+$', r'unit\d+$', r'bldg\d+$', r'ste\d+$', r'suite\d+$', r'ste[a-z]$', r'bldg[a-z]$', r'unit[a-z]$' ]),
                 ('APT_NUM', [ r'^' + apts_base + r'\d+$', r'^' + apts_base + r'[a-z]$' ]),
 
         # SYMBOLS ONLY
@@ -202,10 +201,10 @@ def is_deleg(seq, arr_st):
     assert isinstance(arr_st, list)
     return any([pred == 'ATTN' for pred in seq.look_ahead(encode_from_word_list(arr_st)).get_next_values()])
 
-def is_suite(seq, arr_st):
+def is_suite(seq, st):
     """Expects ["123","main","st"]"""
-    assert isinstance(arr_st, list)
-    return any([pred == 'SUITE' for pred in seq.look_ahead(encode_from_word_list(arr_st)).get_next_values()])
+    assert isinstance(st, str)
+    return any([pred == 'SUITE' for pred in seq.look_ahead(encode_from_word_list(w(st))).get_next_values()])
 
 def get_markers(seq, sent, lst_targets):
     """Input is like '123 main str' and returns a list of lists

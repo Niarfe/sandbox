@@ -42,6 +42,17 @@ def test_multiple_markers():
         assert len(pext.get_markers(pext.seq, address, ['ADDRESS', 'ATTN'])) == length, "{} should have {} markers".format(address, length)
 
 
+def test_shortlist():
+    shortlist = [
+        ("1 HILLCREST CENTER DRIVE ST 225",    "1 HILLCREST CENTER DRIVE ST 225", "Don't drop the ST"),
+        ("8690 SIERRA COLLEGE BLVD STE",       "8690 SIERRA COLLEGE BLVD",        "Drop the extra STE"),
+        ("1590 WALLISVILLE ROAD POBOX 10190",  "1590 WALLISVILLE ROAD",           "Should drop the po box"),
+        ("1905 N CENTER POINT RD",             "1905 N CENTER POINT RD",          "Do not drop the DR"),
+        ("200 W CENTER PROMENADE #500",        "200 W CENTER PROMENADE #500",     "Do not drop PROMENADE"),
+    ]
+    for address, expected, note in shortlist:
+       assert pext.return_max_address3(pext.seq, address) == expected.upper(), note
+
 def test_incompletes():
     incompletes = [
         ("2010 OLD MONTGOMERY HWY SUITE",    "2010 OLD MONTGOMERY HWY"),
@@ -55,3 +66,19 @@ def test_incompletes():
     ]
     for address, expected in incompletes:
        assert pext.return_max_address3(pext.seq, address) == expected.upper(), "Imcomplete address {} was not trimmed".format(address)
+
+
+def test_is_suite():
+    suites = [
+        "suite 255",
+    ]
+
+    for suite in suites:
+        assert pext.is_suite(pext.seq, suite.lower()) == True, "'{}' should be a suite".format(suite.upper())
+
+    not_suites = [
+        "st 255"
+        "st"
+    ]
+    for suite in not_suites:
+        assert pext.is_suite(pext.seq, suite.lower()) == False, "'{}' should *NOT* be a suite".format(suite.upper())
