@@ -21,7 +21,7 @@ def test_basics():
     ]
 
     for address in valid_addresses:
-        assert pext.return_max_address2(pext.seq, address) == address.lower(), address
+        assert pext.return_max_address2(pext.seq, address) == address.upper(), address
 
 def test_pobox():
     sent = "po box 7001"

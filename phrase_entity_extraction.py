@@ -344,7 +344,7 @@ def decompose_into_dictionary_words(domain, _seq, types):
         idx -= last_length[idx]
     decompositions = decompositions[::-1]
     components = components[::-1]
-    print(decompositions)
+    #print(decompositions)
     return last_length, last_interp, decompositions, components   
 
 
@@ -354,9 +354,10 @@ def return_max_address2(seq, sent):
     found_tuples = decomposition[3]
     max_address = []
     for kindof, value in found_tuples:
-        if kindof[0] in kinds:
+        if kindof and kindof[0] in kinds:
             max_address.append(value)
-    return " ".join(max_address)
+    return " ".join(max_address).upper()
+
 
 if __name__ == "__main__":
     #################################################################################
