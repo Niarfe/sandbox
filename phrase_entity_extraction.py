@@ -145,6 +145,7 @@ with open('data/address_bases.csv', 'r') as source:
         # for suite_sequence in suite_sequences:
         #     #print("<<<< ====")
         #     train_with_provided_list(seq, suite_sequence + lst_sequence + [['ADDRESS']])
+train_with_provided_list(seq, [['DIR'],['_DIR_']])
 
 # import sys
 # sys.exit(0)
