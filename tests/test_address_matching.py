@@ -35,7 +35,7 @@ def test_attn():
 def test_multiple_markers():
     marker_lengths = [
         ("123 main st", 2),
-        ("901 s bolmar st # a", 3),
+        ("901 s bolmar st # a", 2),
         ("123 main st c/o gustav mahler", 4)
     ]
     for address, length in marker_lengths:
