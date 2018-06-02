@@ -80,7 +80,8 @@ def encoder(word, trim=True):
         ('DASH',            [ r'^-$' ]),
 
         # MIXED LETTERS AND NUMBERS
-        ('ADR_HEAD',        [r'^\d+$', word_numbers, r'^[nsew]\d+$', r'^#\d+$', r'\d+-\d+$', r'^[nsew]\d+[nsew]\d+$', rex_gigit_direction, rex_digdashal ]),
+        ('ADR_HEAD',        [r'^\d+$', word_numbers, r'^[nsew]\d+$', r'^#\d+$', r'\d+-\d+$', r'^[nsew]\d+[nsew]\d+$',
+                                rex_gigit_direction, rex_digdashal ]),
         ('ALNUM',           [r'^(\d+[a-z]+|[a-z]+\d+)[\da-z]*$']),
             ('DIGDASHAL',   [r'^\d+-[a-z]+$'] ),
             ('BOXNUM',      [r'^box\d+$']),
@@ -88,8 +89,9 @@ def encoder(word, trim=True):
             ('NUMSTR',      [r'^\d+[a-z]+$' ]),
                 ('NTH',     [ nths, r'^[nsew]\d+(rd|st|th)' ]),
                 ('NUMS_1AL',[ r'^\d+[a-z]$' ]),
-                ('APT_NUM', [ r'^' + apts_base + r'\d+$', r'^' + apts_base + r'[a-z]$' ]),
-
+                ('APT_NUM', [r'^' + apts_base + r'\d+$', r'^' + apts_base + r'[a-z]$']),
+                ('DIG-DIGTH', [ r'^\d+-\d+(th|st|rd)$' ]),
+                ('DIG-AL6',  [ r'^\d+[a-z]{6,}$' ]),
         # SYMBOLS ONLY
         ('COMMA',           [r'^,$']),
         ('PERIOD',          [r'^\.$']),
