@@ -57,13 +57,14 @@ def encoder(word, trim=True):
             ('ARTI',        [ arti ]),
             ('PREP',        [ preps ]),
             ('CONJ',        [ conjs ]),
+            ('WAYCOKY',      [ r'^county$', r'^co$', r'^ky$' ]), # county and co show up in '123 CO RD 456'
             ('SP_ARTI',     [ sp_arti ]),
             ('SP_WAY',      [ sp_way ]),
             ('SP_PRE',      [ sp_pre ]),
             ('FARM2MARK',   [ r'^fm$' ]),
             ('PRE',         [ pre ]),
             ('DIR',         [ dirs ]),
-            ('POB2',        [ r'^box$']),
+            ('POB2',        [ r'^box$', r'^bxo$' ]),
             ('POBHC',       [ r'^(hc|rr)$' ]),
             ('POBOX1',       [ r'^pobox$' ]),
             ('DRAWER',       [ r'^drawer$' ]),
@@ -74,15 +75,16 @@ def encoder(word, trim=True):
         ('DIGIT',           [r'^\d+$']),
         ('DIGDASH',         [ r'\d+-\d+$' ]),
         ('DIGSLASH',        [ r'\d+/\d+$' ]),
+        ('DASH',            [ r'^-$' ]),
 
         # MIXED LETTERS AND NUMBERS
-        ('ADR_HEAD',        [r'^\d+$', word_numbers, r'^[nsew]\d+$', r'^#\d+$', r'\d+-\d+$' ]),
+        ('ADR_HEAD',        [r'^\d+$', word_numbers, r'^[nsew]\d+$', r'^#\d+$', r'\d+-\d+$', r'^[nsew]\d+[nsew]\d+$' ]),
         ('ALNUM',           [r'^(\d+[a-z]+|[a-z]+\d+)[\da-z]*$']),
             ('DIGDASHAL',   [r'^\d+-[a-z]+$'] ),
             ('BOXNUM',      [r'^box\d+$']),
             ('ALDASHDIG',   [r'^[a-z]+-\d+$'] ),
             ('NUMSTR',      [r'^\d+[a-z]+$' ]),
-                ('NTH',     [ nths ]),
+                ('NTH',     [ nths, r'^[nsew]\d+(rd|st|th)' ]),
                 ('NUMS_1AL',[ r'^\d+[a-z]$' ]),
                 ('APT_NUM', [ r'^' + apts_base + r'\d+$', r'^' + apts_base + r'[a-z]$' ]),
 
@@ -92,6 +94,7 @@ def encoder(word, trim=True):
         ('POUND',           [r'^#$']),
 
         # LETTERS AND SYMBOLS
+        ('WORDDASHWORD',    [ r'^[a-z]+-[a-z]+$' ]),
 
         # NUMBERS AND SYMBOLS
         ('POUNDDIG',           [r'^#\d+$']),
@@ -164,6 +167,8 @@ train_samples = [
     ("PO BOX 1570A",    [['POB0'], ['POB2'], ['NUMS_1AL']]),
     ("HC 65 BOX 5008",  [['POBHC'],['DIGIT'],['POB2'],['DIGIT']]),  # https://ribbs.usps.gov/cassmassguidelines/CASS%20and%20MASS%20Guidelines/508Version/address_match_sec10_examples.htm
     ("RR 11 BOX 100",   [['POBHC'],['DIGIT'],['POB2'],['DIGIT']]),   # same ^^
+    ("PO BOX RKM",      [['POB0'], ['POB2'], ['ALPHA']]),
+    ("PO BOX C-847",    [['POB0'], ['POB2'], ['ALDASHDIG']]),
 ]
 for ts, matrix_lst in train_samples:
     matrix_lst.append(['POBOX'])
@@ -410,13 +415,14 @@ def return_best_fit(seq, sent):
 
 def return_max_address3(seq, sent):
     results = return_best_fit(seq,sent)
-    addresses = []
-    for result in results:
-        if result[3][0] in ['ADDRESS', 'SUITE','_DIR_']:
-            addresses.append(result[4])
+    if not results:
+        return ''
+
+    addresses = [result[4] for result in results if result[3][0] in ['ADDRESS', 'SUITE','_DIR_']]
+    
     if not addresses:
-        if result[3][0] in ['POBOX']:
-            addresses.append(result[4])
+        addresses = [result[4] for result in results if result[3][0] in ['POBOX']]
+
     address = " ".join(addresses)
     return address.upper()
 

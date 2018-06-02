@@ -49,9 +49,85 @@ def test_shortlist():
         ("1590 WALLISVILLE ROAD POBOX 10190",  "1590 WALLISVILLE ROAD",           "Should drop the po box"),
         ("1905 N CENTER POINT RD",             "1905 N CENTER POINT RD",          "Do not drop the DR"),
         ("200 W CENTER PROMENADE #500",        "200 W CENTER PROMENADE #500",     "Do not drop PROMENADE"),
+        ("ZERO DUVAL STREET",                  "ZERO DUVAL STREET",               "ZERO is a valid street number?"),
+        # TODO DEAL WITH ANY ALPHA NUMBER ("THIRTY-ONE NEW CHARDON STREET",      "THIRTY-ONE NEW CHARDON STREET",   "THIRTY-ONE is a valid street number"),
+        ("PO BOX RKM",                         "PO BOX RKM",                      "PO BOXes can have alpha ids"),
+        ("PO BOX QQ",                          "PO BOX QQ",                       "PO BOXes can have alpha ids"),
+        ("PO BOX C-847",                       "PO BOX C-847",                    "PO BOXes can have mixed alpha num symbol ids"),
+        # FROM IMPROMPTU FILE
+        ("N72W13536 Lund Lane Apt 116",        "N72W13536 Lund Lane Apt 116",     ""),
+        ("1072 ST. CLAIR ROAD",                "1072 ST CLAIR ROAD",              ""),
+        ("880 GOR-AN FARM RD",                 "880 GOR-AN FARM RD",              ""),
+        ("2602 E. SAN JOSE APT 9",             "2602 E SAN JOSE APT 9",    ""),
+        ("65A BIRD OF PARADISE DR",            "65A BIRD OF PARADISE DR",  ""),
+        ("4876 Co Rd 650",                     "4876 Co Rd 650",           ""),
+        ("1070 WAYATT GROVE CHURCH ROAD","1070 WAYATT GROVE CHURCH ROAD",""),
+        ("291 B PARK RIDGE LN","291 B PARK RIDGE LN",""),
+        ("13130 FRY RD NO 1625","13130 FRY RD NO 1625",""),
+        ("1444 CO RD X","1444 CO RD X",""),
+        ("1200 ST HWY 184","1200 ST HWY 184",""),
+        ("2545 N83RD AVENUE NO.1151",           "2545 N83RD AVENUE NO 1151",""),
+        # TODO ("APT 10 270 WEBERS LANE",              "APT 10 270 WEBERS LANE",""),
+        ("8645 D GOLD PEAK PL","8645 D GOLD PEAK PL",""),
+        ("9116 D SW 20TH COURT","9116 D SW 20TH COURT",""),
+        ("7706 SANTA LUCIA COURT","7706 SANTA LUCIA COURT",""),
+        # TODO ("33 W DELAWARE PLACE APT 21 J","33 W DELAWARE PLACE APT 21 J",""),
+        ("5657 KY HIGHWAY 154","5657 KY HIGHWAY 154",""),
+        ("231 26TH AVENUE EAST NO 211","231 26TH AVENUE EAST NO 211",""),
+        ("507 1/2 WEST FAWN STREET","507 1/2 WEST FAWN STREET",""),
+        ("PO Bxo 428","PO Bxo 428",""),
+        ("11023 ST ANTHONYS COURT","11023 ST ANTHONYS COURT",""),
+        ("9643 ST RT 65","9643 ST RT 65",""),
+        ("19 SAN EUGENIO","19 SAN EUGENIO",""),
+        ("2522 D S ARLINGTON MILL DR","2522 D S ARLINGTON MILL DR",""),
+        ("432 PONCE DE LEON DRIVE","432 PONCE DE LEON DRIVE",""),
+        ("201 KENT AVE NO 3","201 KENT AVE NO 3",""),
+        ("1432 - 58TH STREET","1432 - 58TH STREET",""),
+        ("21846 J.D.ADAMS DRIVE","21846 J D ADAMS DRIVE",""),
+        ("1803 Haight Ave Number 3F","1803 Haight Ave Number 3F",""),
+        ("85 - 3RD STREET","85 - 3RD STREET",""),
+        ("9147 San Diego Road","9147 San Diego Road",""),
+        ("701 LUPO LANE APT E23 HUNTERS RUN","701 LUPO LANE APT E23 HUNTERS RUN",""),
+        ("57835-148TH ST","57835-148TH ST",""),
+        ("3695 Santa Rosa Way","3695 Santa Rosa Way",""),
+        ("APARTMENT 43 1625 BRADFIELD DRIVE","APARTMENT 43 1625 BRADFIELD DRIVE",""),
+        ("5502 D Shadow Glen CT","5502 D Shadow Glen CT",""),
+        ("17101 CO RD 263","17101 CO RD 263",""),
+        ("349 CO. RD. 396","349 CO. RD. 396",""),
+        ("3970 REBECK RD East St Paul","3970 REBECK RD East St Paul",""),
+        ("101 MONTGOMERY AVENUE APT. B-1","101 MONTGOMERY AVENUE APT. B-1",""),
+        ("3020 W. SAN JUAN DRIVE","3020 W. SAN JUAN DRIVE",""),
+        ("PO BOX 5041IG BEAVER","PO BOX 5041IG BEAVER",""),
+        ("PO BOX 3277-CRS","PO BOX 3277-CRS",""),
+        ("A-5717 138TH AVE","A-5717 138TH AVE",""),
+        ("966-C PARK STREET","966-C PARK STREET",""),
+        ("936-C OLD CLEMSON HIGHWAY","936-C OLD CLEMSON HIGHWAY",""),
+        ("901-C CLINT MOORE ROAD","901-C CLINT MOORE ROAD",""),
+        ("9005-C RED BRANCH RD","9005-C RED BRANCH RD",""),
+        ("724-4TH STREET","724-4TH STREET",""),
+        ("6541-C FRANZ WARNER PARKWAY","6541-C FRANZ WARNER PARKWAY",""),
+        ("5901-A PEACHTREE DUNWOODY RD","5901-A PEACHTREE DUNWOODY RD",""),
+        ("5000-14TH AVENUE","5000-14TH AVENUE",""),
+        ("4215-D STUART ANDREW BLVD","4215-D STUART ANDREW BLVD",""),
+        ("3903-A FAIR RIDGE DR","3903-A FAIR RIDGE DR",""),
+        ("3421-M SAIN VARDELL LANE","3421-M SAIN VARDELL LANE",""),
+        ("3110-A ASHFORD DUNWOODY RD","3110-A ASHFORD DUNWOODY RD",""),
+        ("2929-A CAPITAL MEDICAL BLVD","2929-A CAPITAL MEDICAL BLVD",""),
+        ("2500NW 39TH STREET","2500NW 39TH STREET",""),
+        ("21-A OAK BRANCH DRIVE","21-A OAK BRANCH DRIVE",""),
+        ("20001-A EMERALD COAST PARKWAY","20001-A EMERALD COAST PARKWAY",""),
+        ("199-A FAIRBURN INDUSTRIAL BLVD","199-A FAIRBURN INDUSTRIAL BLVD",""),
+        ("142-A TALATHA CHURCH ROAD","142-A TALATHA CHURCH ROAD",""),
+        ("1301-A LEMAIRE","1301-A LEMAIRE",""),
+        ("108-A PARK PLACE COURT","108-A PARK PLACE COURT",""),
+        ("100-B FORSYTH HALL DRIVE","100-B FORSYTH HALL DRIVE",""),
+        ("NOTTINGHAM VILLAGE SQUARE 2653-A WHITEHORSE-HAMILTON SQ","NOTTINGHAM VILLAGE SQUARE 2653-A WHITEHORSE-HAMILTON SQ",""),
+        ("9401LITTLE RIVER TPKE","9401LITTLE RIVER TPKE",""),
+        ("50THIELMAN DRIVE","50THIELMAN DRIVE",""),
+        ("411BUTTERNUT DR","411BUTTERNUT DR",""),
     ]
     for address, expected, note in shortlist:
-       assert pext.return_max_address3(pext.seq, address) == expected.upper(), note
+        assert pext.return_max_address3(pext.seq, address) == expected.upper(), '{},"{}"'.format(expected.upper(),pext.encode_from_word_list(pext.w(expected.lower())))
 
 def test_incompletes():
     incompletes = [
@@ -65,7 +141,7 @@ def test_incompletes():
         ("12665 VETERANS MEMORIAL DR SUITE", "12665 VETERANS MEMORIAL DR"),
     ]
     for address, expected in incompletes:
-       assert pext.return_max_address3(pext.seq, address) == expected.upper(), "Imcomplete address {} was not trimmed".format(address)
+       assert pext.return_max_address3(pext.seq, address) == expected.upper(), '{} {}'.format(address)
 
 
 def test_is_suite():
@@ -82,3 +158,4 @@ def test_is_suite():
     ]
     for suite in not_suites:
         assert pext.is_suite(pext.seq, suite.lower()) == False, "'{}' should *NOT* be a suite".format(suite.upper())
+
