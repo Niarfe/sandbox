@@ -391,11 +391,21 @@ def return_best_fit(seq, sent, book_fit=True):
             return True
 
     def add_next(markers, best_fit, entity):
-        suites = get_sorted_entity(markers, entity)
-        idx = len(suites) - 1
+        """Check markers of type 'entity' and push into best_fit if it doesn't overlap with existing"""
+        sorted_markers = get_sorted_entity(markers, entity)
+        if entity == 'ADDRESS' and len(sorted_markers) > 1:
+            max_len = sorted_markers[-1][2]
+            #print("max len", max_len)
+            #print("A",sorted_markers)
+            sorted_markers = [marker for marker in sorted_markers if marker[2] == max_len] # keep only large ones
+            sorted_markers.sort(key=lambda x: int(x[0]))
+            #print("B",sorted_markers)
+            sorted_markers = sorted_markers[::-1]
+        idx = len(sorted_markers) - 1
         while idx >= 0:
-            if not any([entitys_overlap(item, suites[idx]) for item in best_fit]):
-                best_fit.append(suites[idx])
+            if not any([entitys_overlap(item, sorted_markers[idx]) for item in best_fit]):
+                #print("C",sorted_markers)
+                best_fit.append(sorted_markers[idx])
                 break
             else:
                 idx -= 1

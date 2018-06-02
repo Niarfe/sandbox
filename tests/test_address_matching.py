@@ -87,7 +87,7 @@ def test_shortlist():
         ("1803 Haight Ave Number 3F","1803 Haight Ave Number 3F",""),
         ("85 - 3RD STREET","85 - 3RD STREET",""),
         ("9147 San Diego Road","9147 San Diego Road",""),
-        ("701 LUPO LANE APT E23 HUNTERS RUN","701 LUPO LANE APT E23 HUNTERS RUN",""),
+        ("701 LUPO LANE APT E23 HUNTERS RUN","701 LUPO LANE APT E23",""),
         # TODO ("57835-148TH ST","57835-148TH ST",""),
         ("3695 Santa Rosa Way","3695 Santa Rosa Way",""),
         ("APARTMENT 43 1625 BRADFIELD DRIVE","APARTMENT 43 1625 BRADFIELD DRIVE",""),
