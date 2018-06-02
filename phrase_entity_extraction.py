@@ -41,6 +41,8 @@ apts_base = load_category_from_file_no_bookends('data/words_apts.csv')
 # http://maf.directory/zp4/abbrev.html
 
 def encoder(word, trim=True):
+    rex_gigit_direction = r'^\d+[nsew]{1,2}'
+    rex_digdashal = r'^\d+-[a-z]+$'
     encodings = [
         # LETTERS ONLY
         ('ALPHA',           [r'^[a-z\'A-Z]+$']),
@@ -78,7 +80,7 @@ def encoder(word, trim=True):
         ('DASH',            [ r'^-$' ]),
 
         # MIXED LETTERS AND NUMBERS
-        ('ADR_HEAD',        [r'^\d+$', word_numbers, r'^[nsew]\d+$', r'^#\d+$', r'\d+-\d+$', r'^[nsew]\d+[nsew]\d+$' ]),
+        ('ADR_HEAD',        [r'^\d+$', word_numbers, r'^[nsew]\d+$', r'^#\d+$', r'\d+-\d+$', r'^[nsew]\d+[nsew]\d+$', rex_gigit_direction, rex_digdashal ]),
         ('ALNUM',           [r'^(\d+[a-z]+|[a-z]+\d+)[\da-z]*$']),
             ('DIGDASHAL',   [r'^\d+-[a-z]+$'] ),
             ('BOXNUM',      [r'^box\d+$']),
@@ -169,6 +171,8 @@ train_samples = [
     ("RR 11 BOX 100",   [['POBHC'],['DIGIT'],['POB2'],['DIGIT']]),   # same ^^
     ("PO BOX RKM",      [['POB0'], ['POB2'], ['ALPHA']]),
     ("PO BOX C-847",    [['POB0'], ['POB2'], ['ALDASHDIG']]),
+    ("PO BOX 5041IG",   [['POB0'], ['POB2'], ['NUMSTR']]),
+    ("PO BOX 3277-CRS", [['POB0'], ['POB2'], ['DIGDASHAL']]),
 ]
 for ts, matrix_lst in train_samples:
     matrix_lst.append(['POBOX'])
@@ -327,36 +331,25 @@ def validate_back_jump(last_length, idx):
 def decompose_into_dictionary_words(domain, _seq, types):
     last_length = [-1] * len(domain)
     last_interp = ['']*len(domain)
-    #print("Length Domain: ", len(domain))
+
     for i in range(len(domain)):
-        #print("INPUT TO GET_INTERPRETATION: ", domain[:i + 1])
         inter1 = get_interpretation(_seq, domain[:i + 1], types)
         if any([ret_type in types for ret_type in inter1]):
-            #print("HIT A")
             last_interp[i] = [hit for hit in inter1 if hit in types]
             last_length[i] = i + 1
 
         if last_length[i] == -1:
             for j in range(i):
                 inter2 = get_interpretation(_seq, domain[j + 1:i + 1], types)
-                #print("SUB INPUT for INTERPRET: ", domain[j+1:i+1], inter2, last_length[j])
-                #if last_length[j] != -1 and any([ret_type in types for ret_type in inter2]):
                 if any([ret_type in types for ret_type in inter2]):
-                    #print('HIT B')
                     last_interp[i] = [hit for hit in inter2 if hit in types]
                     last_length[i] = i - j
                     break
-        #print("last_length: ", last_length)
-        #print("last_interp: ", last_interp)
-    #return last_length, last_interp
-    #print("last_length: ", last_length)
-    #print("last_interp: ", last_interp)
-    #print("BEGIN DECOMPOSITON PHASE")
+    print(last_length)
     decompositions = []
     components = []
     idx = index_tail(domain)
     while idx >= 0:
-        #print("idx: ", idx)
         if validate_back_jump(last_length, idx):
             decompositions.append(last_interp[idx])
             components.append((last_interp[idx], " ".join(domain[idx + 1 - last_length[idx]:idx + 1])))
@@ -369,7 +362,6 @@ def decompose_into_dictionary_words(domain, _seq, types):
             idx -= 1
     decompositions = decompositions[::-1]
     components = components[::-1]
-    #print(decompositions)
     return last_length, last_interp, decompositions, components
 
 
@@ -384,16 +376,20 @@ def return_max_address2(seq, sent):
     return " ".join(max_address).upper()
 
 ### SUPER HYDRA ACTION!
-def return_best_fit(seq, sent):
+def return_best_fit(seq, sent, book_fit=True):
+    items_of_interest = ['POBOX', 'ADDRESS', 'ATTN', 'SUITE','_DIR_']
+    markers = get_markers(seq, sent, items_of_interest)
     def get_sorted_entity(_markers, entity):
         entities = [arr for arr in _markers if arr[3][0] == entity]
         entities.sort(key=lambda x: int(x[2]))
         return entities
+
     def entitys_overlap(ent1, ent2):
         if ent1[1] <= ent2[0] or ent2[1] <= ent1[0]:
             return False
         else:
             return True
+
     def add_next(markers, best_fit, entity):
         suites = get_sorted_entity(markers, entity)
         idx = len(suites) - 1
@@ -404,12 +400,40 @@ def return_best_fit(seq, sent):
             else:
                 idx -= 1
         return best_fit
-    markers = get_markers(seq, sent, ['ADDRESS', 'POBOX', 'SUITE', 'ATTN','_DIR_'])
-    best_fit = []
-    for nugget in ['POBOX', 'ADDRESS', 'ATTN', 'SUITE','_DIR_']:
-        best_fit = add_next(markers, best_fit, nugget)
 
-    best_fit.sort(key=lambda x: int(x[0]))
+    def book_best_fit(arr_domain, markers):
+        def is_in_dictionary(markers, start, endplus):
+            match_starts = [item for item in markers if item[0] == start]
+            match_both = [item for item in match_starts if item[1] == endplus]
+            return match_both
+        last_length = [-1]*len(arr_domain)
+        for i in range(len(arr_domain)):
+            if is_in_dictionary(markers, 0, i+1):
+                last_length[i] = i + 1
+            if last_length[i] == -1:
+                for j in range(i):
+                    if last_length[j] != -1 and is_in_dictionary(markers, j+1, i+1):
+                        last_length[i] = i - j
+                        break
+        decompositions = []
+        if last_length[-1] != -1:
+            idx = len(arr_domain) - 1
+            while idx >= 0:
+                decompositions.append(is_in_dictionary(markers,idx + 1 - last_length[idx], idx + 1)[0])
+                idx -= last_length[idx]
+            decompositions = decompositions[::-1]
+        return decompositions
+
+    best_fit = []
+    if book_fit:
+        best_fit = book_best_fit(w(sent), markers)
+        if best_fit:
+            return best_fit
+
+    for nugget in items_of_interest:
+        best_fit = add_next(markers, best_fit, nugget)
+        best_fit.sort(key=lambda x: int(x[0]))
+
     return best_fit
 
 
@@ -419,7 +443,7 @@ def return_max_address3(seq, sent):
         return ''
 
     addresses = [result[4] for result in results if result[3][0] in ['ADDRESS', 'SUITE','_DIR_']]
-    
+
     if not addresses:
         addresses = [result[4] for result in results if result[3][0] in ['POBOX']]
 
