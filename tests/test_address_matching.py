@@ -71,7 +71,7 @@ def test_shortlist():
         ("8645 D GOLD PEAK PL","8645 D GOLD PEAK PL",""),
         ("9116 D SW 20TH COURT","9116 D SW 20TH COURT",""),
         ("7706 SANTA LUCIA COURT","7706 SANTA LUCIA COURT",""),
-        ("33 W DELAWARE PLACE APT 21 J","33 W DELAWARE PLACE APT 21 J",""),
+        ("33 W DELAWARE PLACE APT 21 J","33 W DELAWARE PLACE APT 21 J","This is only catching the 21 and J as separate suites"),
         ("5657 KY HIGHWAY 154","5657 KY HIGHWAY 154",""),
         ("231 26TH AVENUE EAST NO 211","231 26TH AVENUE EAST NO 211",""),
         ("507 1/2 WEST FAWN STREET","507 1/2 WEST FAWN STREET",""),
@@ -94,7 +94,7 @@ def test_shortlist():
         ("5502 D Shadow Glen CT","5502 D Shadow Glen CT",""),
         ("17101 CO RD 263","17101 CO RD 263",""),
         ("349 CO. RD. 396","349 CO RD 396",""),
-        ("3970 REBECK RD East St Paul","3970 REBECK RD East",""),
+        # TODO ("3970 REBECK RD East St Paul","3970 REBECK RD","[[0, 4, 4, ['ADDRESS'], '3970 rebeck rd east']]"),
         ("101 MONTGOMERY AVENUE APT. B-1","101 MONTGOMERY AVENUE APT B-1",""),
         ("3020 W. SAN JUAN DRIVE","3020 W SAN JUAN DRIVE",""),
         ("PO BOX 5041IG BEAVER","PO BOX 5041IG",""),
@@ -146,6 +146,11 @@ def test_shortlist():
         # TODO I GET BACK A DOUBLE ADDRESS! ("815 Elmore Street 14416 N. 177th LN", "815 Elmore Street", "took left as expected, let Ashley know"),
         ("23461 US HWY 5 N No. 818", "23461 US HWY 5 N No 818", "ok but took triple suite"),
         # TODO ("3970 REBECK RD East St Paul", "3970 REBECK RD East St Paul", "it took in east, but east is part of saint paul"),
+        # ("1010 SHAGBARK RD 1 C", "1010 SHAGBARK RD 1 C", "ok, but it took C as suite and left the 1 as address..."),
+        # ("6900 STONERIDGE DR E33", "6900 STONERIDGE DR E33", "how are we supposed to tell that E33 is the suite? not the address?"),
+        # ("1431 MAPLEWOOD ST N.E.", "1431 MAPLEWOOD ST N.E.", "[[0, 4, 4, ['ADDRESS'], '1431 maplewood st n'], [4, 5, 1, ['_DIR_', 'SUITE'], 'e']]"),
+        # ("452 Union B Rd.", "452 UNION B RD", "[[0, 2, 2, ['ADDRESS'], '452 union'], [2, 3, 1, ['SUITE'], 'b']]"),
+        # ("17504 27TH AVE N.E.","17504 27TH AVE N E","[[0, 1, 1, ['SUITE'], '17504'], [1, 5, 4, ['ADDRESS'], '27th ave n e']]"),
     ]
     for address, expected, note in shortlist:
         assert pext.return_max_address3(pext.seq, address) == expected.upper(), '{},"{}"'.format(expected.upper(),pext.encode_from_word_list(pext.w(expected.lower())))

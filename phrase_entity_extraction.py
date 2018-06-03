@@ -46,6 +46,7 @@ def encoder(word, trim=True):
     rex_digdashal = r'^\d+-[a-z]+$'
     rex_alnum = r'^(\d+[a-z]+|[a-z]+\d+)[\da-z]*$'
     rex_alnumdashnum = r'^[a-z]\d+-\d+$'
+    rex_oneal_digits = r'^[a-z]\d+'
     encodings = [
         # LETTERS ONLY
         ('ALPHA',           [r'^[a-z\'A-Z]+$']),
@@ -84,7 +85,10 @@ def encoder(word, trim=True):
 
         # MIXED LETTERS AND NUMBERS
         ('ADR_HEAD',        [r'^\d+$', word_numbers, r'^[nsew]\d+$', r'^#\d+$', r'\d+-\d+$', r'^[nsew]\d+[nsew]\d+$',
-                                rex_gigit_direction, rex_digdashal, rex_alnum ]),
+                                rex_gigit_direction, rex_digdashal,
+                                rex_oneal_digits,
+                                #rex_alnum
+                                ]),
         ('ALNUM',           [rex_alnum]),
             ('DIGDASHAL',   [r'^\d+-[a-z]+$'] ),
             ('BOXNUM',      [r'^box\d+$']),
