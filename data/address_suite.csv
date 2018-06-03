@@ -12,6 +12,7 @@ STEC,[['APT_NUM']]
 STE ABC,"[['APT'], ['ALPHA']]"
 APT F15,"[['APT'], ['ALNUM']]"
 STE 141,"[['APT'], ['DIGIT']]"
+UNIT B2-2,"[['APT'], ['APT_NUM']]"
 SUITE 401 UNIT C29,"[['APT'], ['DIGIT'], ['APT'], ['ALNUM']]"
 STE 141 142,"[['APT'], ['DIGIT'],['DIGIT']]"
 UNIT B 1,"[['APT'], ['LETTER'], ['DIGIT']]"

@@ -16,6 +16,7 @@ def load_category_from_file_no_bookends(fpath):
     return r'(' + "|".join(ways) + r')'
 
 def w(str_sentence):
+    str_sentence = str(str_sentence)
     return re.findall(r"[\w'/\-:#]+|[,!?&]", str_sentence)
 
 seq = Hydraseq('input')
@@ -43,6 +44,8 @@ apts_base = load_category_from_file_no_bookends('data/words_apts.csv')
 def encoder(word, trim=True):
     rex_gigit_direction = r'^\d+[nsew]{1,2}'
     rex_digdashal = r'^\d+-[a-z]+$'
+    rex_alnum = r'^(\d+[a-z]+|[a-z]+\d+)[\da-z]*$'
+    rex_alnumdashnum = r'^[a-z]\d+-\d+$'
     encodings = [
         # LETTERS ONLY
         ('ALPHA',           [r'^[a-z\'A-Z]+$']),
@@ -59,7 +62,7 @@ def encoder(word, trim=True):
             ('ARTI',        [ arti ]),
             ('PREP',        [ preps ]),
             ('CONJ',        [ conjs ]),
-            ('WAYCOKY',      [ r'^county$', r'^co$', r'^ky$' ]), # county and co show up in '123 CO RD 456'
+            ('WAYCOKY',      [ r'^county$', r'^co$', r'^ky$', r'^state$', r'^us$' ]), # county and co show up in '123 CO RD 456'
             ('SP_ARTI',     [ sp_arti ]),
             ('SP_WAY',      [ sp_way ]),
             ('SP_PRE',      [ sp_pre ]),
@@ -81,21 +84,22 @@ def encoder(word, trim=True):
 
         # MIXED LETTERS AND NUMBERS
         ('ADR_HEAD',        [r'^\d+$', word_numbers, r'^[nsew]\d+$', r'^#\d+$', r'\d+-\d+$', r'^[nsew]\d+[nsew]\d+$',
-                                rex_gigit_direction, rex_digdashal ]),
-        ('ALNUM',           [r'^(\d+[a-z]+|[a-z]+\d+)[\da-z]*$']),
+                                rex_gigit_direction, rex_digdashal, rex_alnum ]),
+        ('ALNUM',           [rex_alnum]),
             ('DIGDASHAL',   [r'^\d+-[a-z]+$'] ),
             ('BOXNUM',      [r'^box\d+$']),
             ('ALDASHDIG',   [r'^[a-z]+-\d+$'] ),
             ('NUMSTR',      [r'^\d+[a-z]+$' ]),
                 ('NTH',     [ nths, r'^[nsew]\d+(rd|st|th)' ]),
                 ('NUMS_1AL',[ r'^\d+[a-z]$' ]),
-                ('APT_NUM', [r'^' + apts_base + r'\d+$', r'^' + apts_base + r'[a-z]$']),
+                ('APT_NUM', [r'^' + apts_base + r'\d+$', r'^' + apts_base + r'[a-z]$', rex_alnumdashnum ]),
                 ('DIG-DIGTH', [ r'^\d+-\d+(th|st|rd)$' ]),
                 ('DIG-AL6',  [ r'^\d+[a-z]{6,}$' ]),
         # SYMBOLS ONLY
         ('COMMA',           [r'^,$']),
         ('PERIOD',          [r'^\.$']),
         ('POUND',           [r'^#$']),
+        ('AND',             [r'^&$', r'^and$' ]),
 
         # LETTERS AND SYMBOLS
         ('WORDDASHWORD',    [ r'^[a-z]+-[a-z]+$' ]),
@@ -182,10 +186,11 @@ for ts, matrix_lst in train_samples:
 
 # valid attn
 train_samples = [
-    ("c/o john smith",     [['DELEG'],['ALPHA'],['ALPHA']]),
-    ("attn john smith",    [['DELEG'],['ALPHA'],['ALPHA']]),
-    ("attn: john smith",   [['DELEG'],['ALPHA'],['ALPHA']]),
-    ("c/o john",           [['DELEG'],['ALPHA']]),
+    ("c/o john smith",              [['DELEG'],['ALPHA'],['ALPHA']]),
+    ("attn john smith",             [['DELEG'],['ALPHA'],['ALPHA']]),
+    ("attn: john smith",            [['DELEG'],['ALPHA'],['ALPHA']]),
+    ("c/o john", [['DELEG'],        ['ALPHA']]),
+    ("c/o dell&schaefer law firm",  [['DELEG'], ['ALPHA'], ['AND'], ['ALPHA'], ['ALPHA'], ['ALPHA']]),
 ]
 for ts, matrix_lst in train_samples:
     matrix_lst.append(['ATTN'])
