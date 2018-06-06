@@ -3,43 +3,47 @@ import re
 from hydraseq import Hydraseq
 
 
-def load_category_from_file(fpath):
+def load_category_from_file(path_data, fpath):
     """Take a one word per line file and return a regex for the concatenation '^(w1|w2)$'"""
-    with open(fpath, 'r') as source:
+    with open("{}/{}".format(path_data, fpath), 'r') as source:
         ways = [line.strip().lower() for line in source]
     return r'^(' + "|".join(ways) + r')$'
 
-def load_category_from_file_no_bookends(fpath):
+def load_category_from_file_no_bookends(path_data, fpath):
     """Take a one word per line file and return a regex for the concatenation '(w1|w2)', NOTE the missine ^ and $"""
-    with open(fpath, 'r') as source:
+    with open("{}/{}".format(path_data, fpath), 'r') as source:
         ways = [line.strip().lower() for line in source]
     return r'(' + "|".join(ways) + r')'
 
-def w(str_sentence):
+def tokenize_to_list(str_sentence):
     str_sentence = str(str_sentence)
     return re.findall(r"[\w'/\-:#]+|[,!?&]", str_sentence)
 
+# Initialize sequencer
 seq = Hydraseq('input')
-negatives = load_category_from_file('data/words_non_address.csv')
-ways = load_category_from_file('data/words_way.csv')
-common_street = load_category_from_file('data/words_common_street.csv')
-structures = load_category_from_file('data/words_structures.csv')
-preps = load_category_from_file('data/words_preps.csv')
-conjs = load_category_from_file('data/words_conjs.csv')
-apts = load_category_from_file('data/words_apts.csv')
-nths = load_category_from_file('nth.csv')
-dirs = load_category_from_file('dirs.csv')
-arti = load_category_from_file('data/words_arti.csv')
-pre  = load_category_from_file('pre.csv')
-deleg = load_category_from_file('deleg.csv')
-wordways = load_category_from_file('data/words_word_way.csv')
-gfeatures = load_category_from_file('data/words_gfeatures.csv')
-sp_arti = load_category_from_file('data/words_sp_arti.csv')
-sp_way = load_category_from_file('data/words_sp_way.csv')
-sp_pre = load_category_from_file('data/words_sp_pre.csv')
-word_numbers = load_category_from_file('data/words_numbers.csv')
-apts_base = load_category_from_file_no_bookends('data/words_apts.csv')
-# http://maf.directory/zp4/abbrev.html
+
+# Load word and regex matchers
+data_directory = "data"
+negatives       = load_category_from_file(data_directory, 'words_non_address.csv')
+ways            = load_category_from_file(data_directory, 'words_way.csv')
+common_street   = load_category_from_file(data_directory, 'words_common_street.csv')
+structures      = load_category_from_file(data_directory, 'words_structures.csv')
+preps           = load_category_from_file(data_directory, 'words_preps.csv')
+conjs           = load_category_from_file(data_directory, 'words_conjs.csv')
+apts            = load_category_from_file(data_directory, 'words_apts.csv')
+nths            = load_category_from_file(data_directory, 'nth.csv')
+dirs            = load_category_from_file(data_directory, 'dirs.csv')
+arti            = load_category_from_file(data_directory, 'words_arti.csv')
+pre             = load_category_from_file(data_directory, 'pre.csv')
+deleg           = load_category_from_file(data_directory, 'deleg.csv')
+wordways        = load_category_from_file(data_directory, 'words_word_way.csv')
+gfeatures       = load_category_from_file(data_directory, 'words_gfeatures.csv')
+sp_arti         = load_category_from_file(data_directory, 'words_sp_arti.csv')
+sp_way          = load_category_from_file(data_directory, 'words_sp_way.csv')
+sp_pre          = load_category_from_file(data_directory, 'words_sp_pre.csv')
+word_numbers    = load_category_from_file(data_directory, 'words_numbers.csv')
+apts_base       = load_category_from_file_no_bookends(data_directory, 'words_apts.csv')
+
 
 def encoder(word, trim=True):
     rex_gigit_direction = r'^\d+[nsew]{1,2}'
@@ -130,11 +134,8 @@ def encoder(word, trim=True):
         return encoding
 
 
-
-# THOU SHALL NOT SEQUENCE THREE ALPHAS IN A ROW!
 def train_with_provided_list(seq, matrix_lst):
     """matrix list means [['DIGIT'],['ALPHA'],['WAY']] for example"""
-    #print(matrix_lst)
     return seq.insert(matrix_lst, is_learning=True).get_next_values()
 
 
@@ -151,18 +152,10 @@ with open('data/address_bases.csv', 'r') as source:
     csv_file = csv.DictReader(source)
     for row in csv_file:
         lst_sequence = eval(row['SEQUENCE'])
-        #print("==PLAIN")
         train_with_provided_list(seq, lst_sequence + [['ADDRESS']])  # THIS IS THE PLAIN ADDRESS SEQUENCE
-        # for suite_sequence in suite_sequences:
-        #     #print("==== >>>>")
-        #     train_with_provided_list(seq, lst_sequence + suite_sequence + [['ADDRESS']])
-        # for suite_sequence in suite_sequences:
-        #     #print("<<<< ====")
-        #     train_with_provided_list(seq, suite_sequence + lst_sequence + [['ADDRESS']])
+
 train_with_provided_list(seq, [['DIR'],['_DIR_']])
 
-# import sys
-# sys.exit(0)
 
 # valid po box
 train_samples = [
@@ -224,7 +217,7 @@ def is_deleg(seq, arr_st):
 def is_suite(seq, st):
     """Expects ["123","main","st"]"""
     assert isinstance(st, str)
-    return any([pred == 'SUITE' for pred in seq.look_ahead(encode_from_word_list(w(st))).get_next_values()])
+    return any([pred == 'SUITE' for pred in seq.look_ahead(encode_from_word_list(tokenize_to_list(st))).get_next_values()])
 
 def get_markers(seq, sent, lst_targets):
     """Input is like '123 main str' and returns a list of lists
@@ -233,7 +226,7 @@ def get_markers(seq, sent, lst_targets):
         ATTN!!  this lowercases stuff, TODO: Generalize this so it doesn't need lowercasing
     """
     sent = str(sent).lower().strip()
-    arr_w = w(sent)
+    arr_w = tokenize_to_list(sent)
     idx_tail = len(arr_w)
     markers = []
 
@@ -253,7 +246,7 @@ def get_best_fit(seq, sent, lst_targets):
         ATTN!!  this lowercases stuff, TODO: Generalize this so it doesn't need lowercasing
     """
     sent = str(sent).lower().strip()
-    arr_w = w(sent)
+    arr_w = tokenize_to_list(sent)
     idx_tail = len(arr_w)
     markers = []
 
@@ -271,61 +264,16 @@ def get_best_fit(seq, sent, lst_targets):
     return greedy_match
 
 
-
-def return_max_sequence(seq, sent, arr_cands, entity):
-    sent = str(sent).lower().strip()
-    arr_cands = arr_cands #[arr_cand for arr_cand in arr_cands if arr_cand[4] == entity]
-    if not arr_cands:
-        print("NOTHING HERE")
-        return str([encoder(word) for word in w(sent)])
-
-    max_len = 0
-    for cand in arr_cands:
-        if cand[2] > max_len:
-            max_len = cand[2]
-            candidate_address = cand[4]
-
-    candidate_address = candidate_address.upper()
-    if candidate_address != sent.upper():
-        return '{}'.format(str([encoder(word, trim=True) for word in w(sent)]))
-    else:
-        return candidate_address
-
-
-def return_max_address(seq, sent):
-    sent = str(sent).lower().strip()
-    sent = re.sub(r'\s+', ' ', sent)
-    arr_cands = get_markers(seq, sent, ['ADDRESS', 'POBOX'])
-    if not arr_cands:
-        return str(encode_from_word_list(w(sent)))
-
-    max_len = 0
-    for cand in arr_cands:
-        if cand[2] > max_len:
-            max_len = cand[2]
-            candidate_address = cand[4]
-
-    candidate_address = candidate_address.upper()
-    if False: #candidate_address != sent.upper():
-        return '{}'.format(str([encoder(word, trim=True) for word in w(sent)]))
-    else:
-        return candidate_address
-
-
-### %% NEW SECOND LEVEL
 def get_interpretation(seq, arr_words, arr_search_keys):
-    """INPUT: ['123', 'main']"""
+    """INPUT: ['123', 'main'] : Used in debugging"""
     t1_encoded = encode_from_word_list(arr_words)
-    #print("encoded: " ,t1_encoded)
+
     seq.look_ahead(t1_encoded)
     next_values = seq.get_next_values()
-    #print("returning ", next_values)
+
     return [search_key for search_key in arr_search_keys if search_key in next_values]
 
 
-def index_tail(lst):
-    """Return the 0 based index of last element in lst"""
-    return len(lst) - 1
 def validate_back_jump(last_length, idx):
     """Validate jumping back to start of sequence, check if any other back sequence is in the way"""
     current_range = last_length[idx]
@@ -340,6 +288,7 @@ def validate_back_jump(last_length, idx):
     return True
 
 def decompose_into_dictionary_words(domain, _seq, types):
+    """Used in debugging"""
     last_length = [-1] * len(domain)
     last_interp = ['']*len(domain)
 
@@ -359,7 +308,7 @@ def decompose_into_dictionary_words(domain, _seq, types):
     print(last_length)
     decompositions = []
     components = []
-    idx = index_tail(domain)
+    idx = len(domain) - 1
     while idx >= 0:
         if validate_back_jump(last_length, idx):
             decompositions.append(last_interp[idx])
@@ -375,16 +324,6 @@ def decompose_into_dictionary_words(domain, _seq, types):
     components = components[::-1]
     return last_length, last_interp, decompositions, components
 
-
-def return_max_address2(seq, sent):
-    kinds = ['ADDRESS', 'POBOX', 'SUITE']
-    decomposition = decompose_into_dictionary_words(w(sent.lower()), seq, kinds)
-    found_tuples = decomposition[3]
-    max_address = []
-    for kindof, value in found_tuples:
-        if kindof and kindof[0] in kinds:
-            max_address.append(value)
-    return " ".join(max_address).upper()
 
 ### SUPER HYDRA ACTION!
 def return_best_fit(seq, sent, book_fit=True):
@@ -447,7 +386,7 @@ def return_best_fit(seq, sent, book_fit=True):
 
     best_fit = []
     if book_fit:
-        best_fit = book_best_fit(w(sent), markers)
+        best_fit = book_best_fit(tokenize_to_list(sent), markers)
         if best_fit:
             return best_fit
 
@@ -469,14 +408,7 @@ def return_max_address3(seq, sent):
         addresses = [result[4] for result in results if result[3][0] in ['POBOX']]
 
     address = " ".join(addresses)
-    return address.upper()
+    if len(address.split(' ')) == 1: # exclude any one word address matches TODO: this should be handled earlier
+        return ''
 
-if __name__ == "__main__":
-    #################################################################################
-    import pandas as pd
-    df = pd.read_csv('data/badboys.csv')
-    df_addresses = df[['ACCT_STREET_ADDR']]
-    df_addresses.drop_duplicates(keep='first', inplace=True)
-    df_addresses['NEW ADDRESS'] = df_addresses['ACCT_STREET_ADDR'].apply(lambda x: return_max_address(seq, x))
-    df_addresses.to_csv('processed.csv')
-    os.system("open 'processed.csv'")
+    return address.upper()

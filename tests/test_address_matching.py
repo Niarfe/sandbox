@@ -2,7 +2,7 @@ import csv
 import sys
 sys.path.append('.')
 
-import phrase_entity_extraction as pext
+import field_validate_transform_address as vtad
 
 
 def test_markers():
@@ -11,7 +11,7 @@ def test_markers():
         ("901 s bolmar st # a", 2),
     ]
     for address, length in marker_lengths:
-        assert len(pext.get_markers(pext.seq, address, ['ADDRESS'])) == length, "{} should have {} markers".format(address, length)
+        assert len(vtad.get_markers(vtad.seq, address, ['ADDRESS'])) == length, "{} should have {} markers".format(address, length)
 
 def test_basics():
     valid_addresses = [
@@ -21,15 +21,15 @@ def test_basics():
     ]
 
     for address in valid_addresses:
-        assert pext.return_max_address3(pext.seq, address) == address.upper(), address
+        assert vtad.return_max_address3(vtad.seq, address) == address.upper(), address
 
 def test_pobox():
     sent = "po box 7001"
-    assert pext.is_pobox(pext.seq, pext.w(sent)) == True
+    assert vtad.is_pobox(vtad.seq, vtad.tokenize_to_list(sent)) == True
 
 def test_attn():
     sent = "attn john doe"
-    assert pext.is_deleg(pext.seq, pext.w(sent)) == True
+    assert vtad.is_deleg(vtad.seq, vtad.tokenize_to_list(sent)) == True
 
 
 def test_multiple_markers():
@@ -39,7 +39,7 @@ def test_multiple_markers():
         ("123 main st c/o gustav mahler", 4)
     ]
     for address, length in marker_lengths:
-        assert len(pext.get_markers(pext.seq, address, ['ADDRESS', 'ATTN'])) == length, "{} should have {} markers".format(address, length)
+        assert len(vtad.get_markers(vtad.seq, address, ['ADDRESS', 'ATTN'])) == length, "{} should have {} markers".format(address, length)
 
 
 def test_shortlist():
@@ -153,7 +153,7 @@ def test_shortlist():
         # ("17504 27TH AVE N.E.","17504 27TH AVE N E","[[0, 1, 1, ['SUITE'], '17504'], [1, 5, 4, ['ADDRESS'], '27th ave n e']]"),
     ]
     for address, expected, note in shortlist:
-        assert pext.return_max_address3(pext.seq, address) == expected.upper(), '{},"{}"'.format(expected.upper(),pext.encode_from_word_list(pext.w(expected.lower())))
+        assert vtad.return_max_address3(vtad.seq, address) == expected.upper(), '{},"{}"'.format(expected.upper(),vtad.encode_from_word_list(vtad.tokenize_to_list(expected.lower())))
 
 def test_incompletes():
     incompletes = [
@@ -167,7 +167,7 @@ def test_incompletes():
         ("12665 VETERANS MEMORIAL DR SUITE", "12665 VETERANS MEMORIAL DR"),
     ]
     for address, expected in incompletes:
-       assert pext.return_max_address3(pext.seq, address) == expected.upper(), '{} {}'.format(address)
+       assert vtad.return_max_address3(vtad.seq, address) == expected.upper(), '{} {}'.format(address)
 
 
 def test_is_suite():
@@ -176,12 +176,12 @@ def test_is_suite():
     ]
 
     for suite in suites:
-        assert pext.is_suite(pext.seq, suite.lower()) == True, "'{}' should be a suite".format(suite.upper())
+        assert vtad.is_suite(vtad.seq, suite.lower()) == True, "'{}' should be a suite".format(suite.upper())
 
     not_suites = [
         "st 255"
         "st"
     ]
     for suite in not_suites:
-        assert pext.is_suite(pext.seq, suite.lower()) == False, "'{}' should *NOT* be a suite".format(suite.upper())
+        assert vtad.is_suite(vtad.seq, suite.lower()) == False, "'{}' should *NOT* be a suite".format(suite.upper())
 
