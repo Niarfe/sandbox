@@ -120,7 +120,7 @@ def encoder(word, trim=True):
     if not trim:
         return encoding
     else:
-        if any([key in ['P','O','NEGATIVE', 'TH','SP_ARTI','LETTER', 'WORDWAY', 'WAY', 'APT', 'ARTI', 'PRE', 'DIR', 'DELEG', 'POB2', 'POB0', 'FARM2MARK'] for key in encoding]) and 'ALPHA' in encoding:
+        if any([key in ['P','O','NEGATIVE', 'TH','SP_ARTI','LETTER', 'WORDWAY', 'WAY', 'APT', 'ARTI', 'PRE', 'DIR', 'DELEG', 'POB2', 'POB0', 'POBOX1', 'FARM2MARK'] for key in encoding]) and 'ALPHA' in encoding:
             encoding.remove('ALPHA')  # Redudant category level if we have probable meaning
         if any([key in ['NUMS_1AL', 'NUMSTR', 'NTH'] for key in encoding]) and 'ALNUM' in encoding:
             encoding.remove('ALNUM')  # Redudant category level if we have probable meaning
@@ -171,7 +171,7 @@ train_samples = [
     ("c/o dell&schaefer law firm",  [['DELEG'], ['ALPHA'], ['AND'], ['ALPHA'], ['ALPHA'], ['ALPHA']]),
 ]
 for ts, matrix_lst in train_samples:
-    matrix_lst.append(['ATTN'])
+    matrix_lst.append(['_ATTN_'])
     train_with_provided_list(seq, matrix_lst)
 
 def encode_from_word_list(arr_st):
@@ -182,23 +182,23 @@ def encode_from_word_list(arr_st):
 
 def is_address(seq, arr_st):
     """Expects ["123","main","st"]"""
-    return any([pred == 'ADDRESS' for pred in seq.look_ahead(encode_from_word_list(arr_st)).get_next_values()])
+    return any([pred == '_ADDRESS_' for pred in seq.look_ahead(encode_from_word_list(arr_st)).get_next_values()])
 
 def is_pobox(seq, arr_st):
     """Expects ["123","main","st"]"""
     assert isinstance(arr_st, list)
-    return any([pred == 'POBOX' for pred in seq.look_ahead(encode_from_word_list(arr_st)).get_next_values()])
+    return any([pred == '_POBOX_' for pred in seq.look_ahead(encode_from_word_list(arr_st)).get_next_values()])
 
 
 def is_deleg(seq, arr_st):
     """Expects ["123","main","st"]"""
     assert isinstance(arr_st, list)
-    return any([pred == 'ATTN' for pred in seq.look_ahead(encode_from_word_list(arr_st)).get_next_values()])
+    return any([pred == '_ATTN_' for pred in seq.look_ahead(encode_from_word_list(arr_st)).get_next_values()])
 
 def is_suite(seq, st):
     """Expects ["123","main","st"]"""
     assert isinstance(st, str)
-    return any([pred == 'SUITE' for pred in seq.look_ahead(encode_from_word_list(w(st))).get_next_values()])
+    return any([pred == '_SUITE_' for pred in seq.look_ahead(encode_from_word_list(w(st))).get_next_values()])
 
 def get_markers(seq, sent, lst_targets):
     """Input is like '123 main str' and returns a list of lists
@@ -250,7 +250,7 @@ def return_max_sequence(seq, sent, arr_cands, entity):
     sent = str(sent).lower().strip()
     arr_cands = arr_cands #[arr_cand for arr_cand in arr_cands if arr_cand[4] == entity]
     if not arr_cands:
-        print("NOTHING HERE")
+        #print("NOTHING HERE")
         return str([encoder(word) for word in w(sent)])
 
     max_len = 0
@@ -330,7 +330,7 @@ def decompose_into_dictionary_words(domain, _seq, types):
                     last_interp[i] = [hit for hit in inter2 if hit in types]
                     last_length[i] = i - j
                     break
-    print(last_length)
+    #print(last_length)
     decompositions = []
     components = []
     idx = index_tail(domain)
@@ -437,13 +437,86 @@ def return_max_address3(seq, sent):
     if not results:
         return ''
 
-    addresses = [result[4] for result in results if result[3][0] in ['ADDRESS', 'SUITE','DIR']]
+    addresses = [result[4] for result in results if result[3][0] in ['_ADDRESS_', '_SUITE_','_DIR_']]
 
     if not addresses:
-        addresses = [result[4] for result in results if result[3][0] in ['POBOX']]
+        addresses = [result[4] for result in results if result[3][0] in ['_POBOX_']]
 
     address = " ".join(addresses)
     return address.upper()
+
+
+# POST RELEASE HYDRA EVENT
+def get_best_fit_4(seq, st, lst_entities):
+    assert isinstance(lst_entities,list), "expects lst_entities is [ str, str ]"
+    assert isinstance(lst_entities[0], str), "expects lst_entities is [ str, str ]"
+    assert isinstance(st, str), "expects st to be a str"
+    def get_sorted_indexes(markers, which, up=True):
+        sorted_list = sorted(list(set([marker[which] for marker in markers])))
+        return sorted_list if up else sorted_list[::-1]
+
+
+    def book_best_fit(arr_domain, markers):
+        def is_in_dictionary(markers, start, endplus):
+            match_starts = [item for item in markers if item[0] == start]
+            match_both = [item for item in match_starts if item[1] == endplus]
+            return match_both
+
+        last_length = [-1]*len(arr_domain)
+        for i in range(len(arr_domain)):
+            if is_in_dictionary(markers, 0, i+1):
+                last_length[i] = i + 1
+            if last_length[i] == -1:
+                for j in range(i):
+                    if last_length[j] != -1 and is_in_dictionary(markers, j+1, i+1):
+                        last_length[i] = i - j
+                        break
+        decompositions = []
+        if last_length[-1] != -1:
+            idx = len(arr_domain) - 1
+            while idx >= 0:
+                decompositions.append(is_in_dictionary(markers,idx + 1 - last_length[idx], idx + 1)[0])
+                idx -= last_length[idx]
+            decompositions = decompositions[::-1]
+        return decompositions
+
+
+    markers = get_markers(seq, st, lst_entities)
+    lefts = get_sorted_indexes(markers, 0, up=True)
+    rights = get_sorted_indexes(markers, 1, up=False)
+    #print(lefts)
+    #print(rights)
+    final_decomps = []
+    for left in lefts:
+        for right in rights:
+            subject = w(st)[left:right]
+            if not subject or (right - left) <=1:
+                continue
+            markers = get_markers(seq, " ".join(subject), lst_entities)
+            decomp = book_best_fit(subject, markers)
+            if decomp:
+                #print(left, right, subject,'\n',decomp, '\n')
+                final_decomps.append(decomp)
+    #return final_decomps
+
+    best_decomp = None
+    max_len = 0
+    for decomp in final_decomps:
+        if decomp[-1][1] > max_len:
+            max_len = decomp[-1][1]
+            best_decomp = decomp
+    return best_decomp if best_decomp else []
+
+def return_max_address4(seq, st):
+    lst_final_ents = [['_ADDRESS_', '_SUITE_', '_DIR_'], ['_POBOX_']]
+    for lst_entities in lst_final_ents:
+        best_fit = get_best_fit_4(seq, st, lst_entities)
+        #print("Best_fit: ", best_fit, lst_entities[0])
+        if any([fit[3][0] == lst_entities[0] for fit in best_fit]):
+            str_rep = " ".join([fit[4] for fit in best_fit])
+            return str_rep
+    else:
+        return []
 
 if __name__ == "__main__":
     #################################################################################
