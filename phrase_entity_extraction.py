@@ -146,42 +146,21 @@ def train_sequences_from_file(_seq, filepath, lst_lst_identifier):
     with open(filepath, 'r') as source:
         csv_file = csv.DictReader(source)
         for row in csv_file:
-            str_sequence = row['SEQUENCE']
+            str_sequence = row['SEQUENCE'].strip()
             if len(str_sequence.strip()) == 0:
                 continue
             else:
+                #print("::",str_sequence)
                 lst_sequence = eval(str_sequence)
                 train_with_provided_list(_seq, lst_sequence + lst_lst_identifier)
-    
-train_sequences_from_file(seq, 'data/address_suite.csv', [['SUITE']])
-train_sequences_from_file(seq, 'data/address_bases.csv', [['ADDRESS']])
-train_sequences_from_file(seq, 'data/address_poboxs.csv', [['POBOX']])
+
+train_sequences_from_file(seq, 'data/address_suite.csv', [['_SUITE_']])
+train_sequences_from_file(seq, 'data/address_bases.csv', [['_ADDRESS_']])
+train_with_provided_list(seq, [['DIR'],['_DIR_']])
+train_sequences_from_file(seq, 'data/address_poboxs.csv', [['_POBOX_']])
 
 
 
-# valid po box
-# train_samples = [
-#     ("po box 1234",     [['POB0'],['POB2'],['DIGIT']]),
-#     ("po box1234",      [['POB0'], ['BOXNUM']]),
-#     ("po drawer 1234",  [['POB0'],['DRAWER'],['DIGIT']]),
-#     ("po box #1234",    [['POB0'],['POB2'],['POUNDDIG']]),
-#     ("PO BOX E",        [['POB0'], ['POB2'], ['LETTER']]),
-#     ("box 999",         [['POB2'],['DIGIT']]),
-#     ("post box 999",    [['POST'],['POB2'],['DIGIT']]),
-#     ("pobox 999",       [['POBOX1'],['DIGIT']]),
-#     ("p o box 123",     [['POST'], ['OFFICE'], ['POB2'], ['DIGIT']]),
-#     ("p o drawer 123",  [['POST'], ['OFFICE'], ['DRAWER'], ['DIGIT']]),
-#     ("PO BOX 1570A",    [['POB0'], ['POB2'], ['NUMS_1AL']]),
-#     ("HC 65 BOX 5008",  [['POBHC'],['DIGIT'],['POB2'],['DIGIT']]),  # https://ribbs.usps.gov/cassmassguidelines/CASS%20and%20MASS%20Guidelines/508Version/address_match_sec10_examples.htm
-#     ("RR 11 BOX 100",   [['POBHC'],['DIGIT'],['POB2'],['DIGIT']]),   # same ^^
-#     ("PO BOX RKM",      [['POB0'], ['POB2'], ['ALPHA']]),
-#     ("PO BOX C-847",    [['POB0'], ['POB2'], ['ALDASHDIG']]),
-#     ("PO BOX 5041IG",   [['POB0'], ['POB2'], ['NUMSTR']]),
-#     ("PO BOX 3277-CRS", [['POB0'], ['POB2'], ['DIGDASHAL']]),
-#]
-for ts, matrix_lst in train_samples:
-    matrix_lst.append(['POBOX'])
-    train_with_provided_list(seq, matrix_lst)
 
 # valid attn
 train_samples = [
@@ -383,7 +362,7 @@ def return_max_address2(seq, sent):
 
 ### SUPER HYDRA ACTION!
 def return_best_fit(seq, sent, book_fit=True):
-    items_of_interest = ['POBOX', 'ADDRESS', 'ATTN', 'SUITE','_DIR_']
+    items_of_interest = ['POBOX', 'ADDRESS', 'ATTN', 'SUITE','DIR']
     markers = get_markers(seq, sent, items_of_interest)
     def get_sorted_entity(_markers, entity):
         entities = [arr for arr in _markers if arr[3][0] == entity]
@@ -458,7 +437,7 @@ def return_max_address3(seq, sent):
     if not results:
         return ''
 
-    addresses = [result[4] for result in results if result[3][0] in ['ADDRESS', 'SUITE','_DIR_']]
+    addresses = [result[4] for result in results if result[3][0] in ['ADDRESS', 'SUITE','DIR']]
 
     if not addresses:
         addresses = [result[4] for result in results if result[3][0] in ['POBOX']]
