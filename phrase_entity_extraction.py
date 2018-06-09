@@ -1,7 +1,7 @@
+import csv
 import os
 import re
 from hydraseq import Hydraseq
-
 
 def load_category_from_file(fpath):
     """Take a one word per line file and return a regex for the concatenation '^(w1|w2)$'"""
@@ -134,56 +134,51 @@ def encoder(word, trim=True):
 # THOU SHALL NOT SEQUENCE THREE ALPHAS IN A ROW!
 def train_with_provided_list(seq, matrix_lst):
     """matrix list means [['DIGIT'],['ALPHA'],['WAY']] for example"""
-    #print(matrix_lst)
     return seq.insert(matrix_lst, is_learning=True).get_next_values()
 
 
-import csv
-suite_sequences = []
-with open('data/address_suite.csv', 'r') as source:
-    csv_file = csv.DictReader(source)
-    for row in csv_file:
-        lst_sequence = eval(row['SEQUENCE'])
-        train_with_provided_list(seq, lst_sequence + [['SUITE']])
-        suite_sequences.append(lst_sequence)
+def train_sequences_from_file(_seq, filepath, lst_lst_identifier):
+    """Insert training sequences from stored file.
+        _seq    - a live Hydra sequencer to train
+        filepath    - csv two column file, second column 'SEQUENCE' contains lists of lists
+        lst_lst_identifier  - what identifier to use to cap seqennces, [['mysequence']] for example
+    """
+    with open(filepath, 'r') as source:
+        csv_file = csv.DictReader(source)
+        for row in csv_file:
+            str_sequence = row['SEQUENCE']
+            if len(str_sequence.strip()) == 0:
+                continue
+            else:
+                lst_sequence = eval(str_sequence)
+                train_with_provided_list(_seq, lst_sequence + lst_lst_identifier)
+    
+train_sequences_from_file(seq, 'data/address_suite.csv', [['SUITE']])
+train_sequences_from_file(seq, 'data/address_bases.csv', [['ADDRESS']])
+train_sequences_from_file(seq, 'data/address_poboxs.csv', [['POBOX']])
 
-with open('data/address_bases.csv', 'r') as source:
-    csv_file = csv.DictReader(source)
-    for row in csv_file:
-        lst_sequence = eval(row['SEQUENCE'])
-        #print("==PLAIN")
-        train_with_provided_list(seq, lst_sequence + [['ADDRESS']])  # THIS IS THE PLAIN ADDRESS SEQUENCE
-        # for suite_sequence in suite_sequences:
-        #     #print("==== >>>>")
-        #     train_with_provided_list(seq, lst_sequence + suite_sequence + [['ADDRESS']])
-        # for suite_sequence in suite_sequences:
-        #     #print("<<<< ====")
-        #     train_with_provided_list(seq, suite_sequence + lst_sequence + [['ADDRESS']])
-train_with_provided_list(seq, [['DIR'],['_DIR_']])
 
-# import sys
-# sys.exit(0)
 
 # valid po box
-train_samples = [
-    ("po box 1234",     [['POB0'],['POB2'],['DIGIT']]),
-    ("po box1234",      [['POB0'], ['BOXNUM']]),
-    ("po drawer 1234",  [['POB0'],['DRAWER'],['DIGIT']]),
-    ("po box #1234",    [['POB0'],['POB2'],['POUNDDIG']]),
-    ("PO BOX E",        [['POB0'], ['POB2'], ['LETTER']]),
-    ("box 999",         [['POB2'],['DIGIT']]),
-    ("post box 999",    [['POST'],['POB2'],['DIGIT']]),
-    ("pobox 999",       [['POBOX1'],['DIGIT']]),
-    ("p o box 123",     [['POST'], ['OFFICE'], ['POB2'], ['DIGIT']]),
-    ("p o drawer 123",  [['POST'], ['OFFICE'], ['DRAWER'], ['DIGIT']]),
-    ("PO BOX 1570A",    [['POB0'], ['POB2'], ['NUMS_1AL']]),
-    ("HC 65 BOX 5008",  [['POBHC'],['DIGIT'],['POB2'],['DIGIT']]),  # https://ribbs.usps.gov/cassmassguidelines/CASS%20and%20MASS%20Guidelines/508Version/address_match_sec10_examples.htm
-    ("RR 11 BOX 100",   [['POBHC'],['DIGIT'],['POB2'],['DIGIT']]),   # same ^^
-    ("PO BOX RKM",      [['POB0'], ['POB2'], ['ALPHA']]),
-    ("PO BOX C-847",    [['POB0'], ['POB2'], ['ALDASHDIG']]),
-    ("PO BOX 5041IG",   [['POB0'], ['POB2'], ['NUMSTR']]),
-    ("PO BOX 3277-CRS", [['POB0'], ['POB2'], ['DIGDASHAL']]),
-]
+# train_samples = [
+#     ("po box 1234",     [['POB0'],['POB2'],['DIGIT']]),
+#     ("po box1234",      [['POB0'], ['BOXNUM']]),
+#     ("po drawer 1234",  [['POB0'],['DRAWER'],['DIGIT']]),
+#     ("po box #1234",    [['POB0'],['POB2'],['POUNDDIG']]),
+#     ("PO BOX E",        [['POB0'], ['POB2'], ['LETTER']]),
+#     ("box 999",         [['POB2'],['DIGIT']]),
+#     ("post box 999",    [['POST'],['POB2'],['DIGIT']]),
+#     ("pobox 999",       [['POBOX1'],['DIGIT']]),
+#     ("p o box 123",     [['POST'], ['OFFICE'], ['POB2'], ['DIGIT']]),
+#     ("p o drawer 123",  [['POST'], ['OFFICE'], ['DRAWER'], ['DIGIT']]),
+#     ("PO BOX 1570A",    [['POB0'], ['POB2'], ['NUMS_1AL']]),
+#     ("HC 65 BOX 5008",  [['POBHC'],['DIGIT'],['POB2'],['DIGIT']]),  # https://ribbs.usps.gov/cassmassguidelines/CASS%20and%20MASS%20Guidelines/508Version/address_match_sec10_examples.htm
+#     ("RR 11 BOX 100",   [['POBHC'],['DIGIT'],['POB2'],['DIGIT']]),   # same ^^
+#     ("PO BOX RKM",      [['POB0'], ['POB2'], ['ALPHA']]),
+#     ("PO BOX C-847",    [['POB0'], ['POB2'], ['ALDASHDIG']]),
+#     ("PO BOX 5041IG",   [['POB0'], ['POB2'], ['NUMSTR']]),
+#     ("PO BOX 3277-CRS", [['POB0'], ['POB2'], ['DIGDASHAL']]),
+#]
 for ts, matrix_lst in train_samples:
     matrix_lst.append(['POBOX'])
     train_with_provided_list(seq, matrix_lst)
