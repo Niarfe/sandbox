@@ -42,7 +42,7 @@ apts_base = load_category_from_file_no_bookends('data/words_apts.csv')
 # http://maf.directory/zp4/abbrev.html
 
 def encoder(word, trim=True):
-    rex_gigit_direction = r'^\d+[nsew]{1,2}'
+    rex_gigit_direction = r'^\d+(n|s|e|w|sw|se|nw|ne)$'
     rex_digdashal = r'^\d+-[a-z]+$'
     rex_alnum = r'^(\d+[a-z]+|[a-z]+\d+)[\da-z]*$'
     rex_alnumdashnum = r'^[a-z]\d+-\d+$'
@@ -85,7 +85,8 @@ def encoder(word, trim=True):
 
         # MIXED LETTERS AND NUMBERS
         ('ADR_HEAD',        [r'^\d+$', word_numbers, r'^[nsew]\d+$', r'^#\d+$', r'\d+-\d+$', r'^[nsew]\d+[nsew]\d+$',
-                                rex_gigit_direction, rex_digdashal,
+                                rex_gigit_direction,
+                                rex_digdashal,
                                 rex_oneal_digits,
                                 #rex_alnum
                                 ]),
@@ -451,6 +452,25 @@ def get_best_fit_4(seq, st, lst_entities):
     assert isinstance(lst_entities,list), "expects lst_entities is [ str, str ]"
     assert isinstance(lst_entities[0], str), "expects lst_entities is [ str, str ]"
     assert isinstance(st, str), "expects st to be a str"
+    def entitys_overlap(ent1, ent2):
+        if ent1[1] <= ent2[0] or ent2[1] <= ent1[0]:
+            return False
+        else:
+            return True
+    def sift_markers(markers):
+        boxes = [marker for marker in markers if marker[3][0] == '_POBOX_']
+        addresses = [marker for marker in markers if marker[3][0] == '_ADDRESS_']
+        suites = [marker for marker in markers if marker[3][0] == '_SUITE_']
+        dirs = [marker for marker in markers if marker[3][0] == '_DIR_']
+        new_markers = boxes[:]
+        new_markers.extend(addresses)
+        for suite in suites:
+            if not any([entitys_overlap(suite, item) for item in new_markers]):
+                new_markers.append(suite)
+        for diritem in dirs:
+            if not any([entitys_overlap(diritem, item) for item in new_markers]):
+                new_markers.append(diritem)
+        return new_markers
     def get_sorted_indexes(markers, which, up=True):
         sorted_list = sorted(list(set([marker[which] for marker in markers])))
         return sorted_list if up else sorted_list[::-1]
@@ -482,6 +502,7 @@ def get_best_fit_4(seq, st, lst_entities):
 
 
     markers = get_markers(seq, st, lst_entities)
+    markers = sift_markers(markers)
     lefts = get_sorted_indexes(markers, 0, up=True)
     rights = get_sorted_indexes(markers, 1, up=False)
     #print(lefts)
@@ -493,6 +514,7 @@ def get_best_fit_4(seq, st, lst_entities):
             if not subject or (right - left) <=1:
                 continue
             markers = get_markers(seq, " ".join(subject), lst_entities)
+            markers = sift_markers(markers)
             decomp = book_best_fit(subject, markers)
             if decomp:
                 #print(left, right, subject,'\n',decomp, '\n')
