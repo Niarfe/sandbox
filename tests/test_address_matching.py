@@ -45,6 +45,7 @@ def test_multiple_markers():
 
 def test_shortlist():
     shortlist = [
+        ("10 1ST AVE RM 26","10 1ST AVE RM 26","don't drop the 10 in front"),
         ("1 HILLCREST CENTER DRIVE ST 225",    "1 HILLCREST CENTER DRIVE ST 225", "Don't drop the ST"),
         ("8690 SIERRA COLLEGE BLVD STE",       "8690 SIERRA COLLEGE BLVD",        "Drop the extra STE"),
         ("1590 WALLISVILLE ROAD POBOX 10190",  "1590 WALLISVILLE ROAD",           "Should drop the po box"),

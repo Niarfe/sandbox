@@ -529,7 +529,7 @@ def get_best_fit_4(seq, st, lst_entities):
             best_decomp = decomp
     return best_decomp if best_decomp else []
 
-def return_max_address4(seq, st):
+def return_max_address5(seq, st):
     lst_final_ents = [['_ADDRESS_', '_SUITE_', '_DIR_'], ['_POBOX_']]
     for lst_entities in lst_final_ents:
         best_fit = get_best_fit_4(seq, st, lst_entities)
@@ -539,6 +539,68 @@ def return_max_address4(seq, st):
             return str_rep
     else:
         return []
+
+
+### DOUBLE DECKER APPROACH
+def return_max_address4(seq, sent):
+    markers = get_markers(seq, sent, ['_ADDRESS_', '_POBOX_', '_SUITE_', '_DIR_'])
+    class BreathFirstSearch:
+        def __init__(self, markers):
+            self.markers = markers
+        def end(self, node):
+            return node[1]
+        def start(self, node):
+            return node[0]
+        def type(self, node):
+            return node[3][0]
+        def length(self, node):
+            return node[2]
+        def rep(self, node):
+            return node[4]
+        def get_successors(self, current_node):
+            next_matches = [n for n in self.markers if self.start(n) == self.end(current_node) and self.type(n) != self.type(current_node) and self.type(n) != '_POBOX_']
+            return next_matches[:]
+        def get_branches(self, node):
+            fringe = [[node[:]]]
+            branches = []
+            while fringe:
+                activeNode = fringe.pop()
+                successors = self.get_successors(activeNode[-1])
+                if successors:
+                    for successor in successors:
+                        nextNode = activeNode[:]
+                        nextNode.append(successor)
+                        fringe.append(nextNode[:])
+                else:
+                    branches.append(activeNode)
+            return branches
+        def get_all_branches(self):
+            all_branches = []
+            for node in self.markers:
+                for branch in self.get_branches(node):
+                    all_branches.append(branch)
+            return all_branches
+
+    bfs = BreathFirstSearch(markers)
+    seq2 = Hydraseq('second')
+    seq2.insert("_SUITE_ _ADDRESS_ *KEEP*")
+    seq2.insert("_ADDRESS_ *KEEP*")
+    seq2.insert("_ADDRESS_ _SUITE_ *KEEP*")
+    seq2.insert("_ADDRESS_ _DIR_ *KEEP*")
+    seq2.insert("_ADDRESS_ _DIR_ _SUITE_ *KEEP*")
+    seq2.insert("_POBOX_ *KEEP*")
+    keepers = [branch for branch in bfs.get_all_branches() if 'KEEP' in seq2.look_ahead([node[3] for node in branch] ).get_next_values()]
+
+    max_len = 0
+    max_branch = None
+    for branch in keepers:
+        len_branch = branch[-1][1] - branch[0][0]
+        if len_branch > max_len:
+            max_len = len_branch
+            max_branch = branch
+
+    #print("HERE: ",max_branch)
+    return " ".join([item[4] for item in max_branch])
 
 if __name__ == "__main__":
     #################################################################################
