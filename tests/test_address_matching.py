@@ -5,14 +5,14 @@ sys.path.append('.')
 
 import phrase_entity_extraction as pext
 
-@pytest.mark.skip
+
 def test_markers():
     marker_lengths = [
         ("123 main st", 2),
         ("901 s bolmar st # a", 2),
     ]
     for address, length in marker_lengths:
-        assert len(pext.get_markers(pext.seq, address, ['ADDRESS'])) == length, "{} should have {} markers".format(address, length)
+        assert len(pext.get_markers(pext.seq, address, ['_ADDRESS_'])) == length, "{} should have {} markers".format(address, length)
 
 def test_basics():
     valid_addresses = [
