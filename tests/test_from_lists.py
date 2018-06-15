@@ -23,6 +23,7 @@ def test_base_addresses():
     for base_address in base_addresses:
         assert pext.return_max_address4(pext.seq, base_address).upper() == base_address.upper(), "{} should be a base address".format(base_address)
 
+@pytest.mark.skip
 def test_known_bad_addresses():
     base_addresses = _load_column('data/known_good/known_bad_addresses.csv', 'ADDRESSES')
 
