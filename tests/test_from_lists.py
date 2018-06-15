@@ -18,7 +18,7 @@ def _load_csv_file(path_file):
 
 
 def test_base_addresses():
-    base_addresses = _load_column('data/address_bases.csv', 'ADDRESSES')
+    base_addresses = _load_column('data/address_address.csv', 'ADDRESSES')
 
     for base_address in base_addresses:
         assert pext.return_max_address4(pext.seq, base_address).upper() == base_address.upper(), "{} should be a base address".format(base_address)

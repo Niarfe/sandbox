@@ -2,53 +2,18 @@ import csv
 import os
 import re
 from hydraseq import Hydraseq
-import phrase_entity_encoder as pee
+from phrase_entity_encoder import encoder
 
-
-
-def load_category_from_file(fpath):
-    """Take a one word per line file and return a regex for the concatenation '^(w1|w2)$'"""
-    with open(fpath, 'r') as source:
-        ways = [line.strip().lower() for line in source]
-    return r'^(' + "|".join(ways) + r')$'
-
-def load_category_from_file_no_bookends(fpath):
-    """Take a one word per line file and return a regex for the concatenation '(w1|w2)', NOTE the missine ^ and $"""
-    with open(fpath, 'r') as source:
-        ways = [line.strip().lower() for line in source]
-    return r'(' + "|".join(ways) + r')'
 
 def w(str_sentence):
     str_sentence = str(str_sentence)
     return re.findall(r"[\w'/\-:#]+|[,!?&]", str_sentence)
 
-seq = Hydraseq('input')
-negatives = load_category_from_file('data/words_non_address.csv')
-ways = load_category_from_file('data/words_way.csv')
-common_street = load_category_from_file('data/words_common_street.csv')
-structures = load_category_from_file('data/words_structures.csv')
-preps = load_category_from_file('data/words_preps.csv')
-conjs = load_category_from_file('data/words_conjs.csv')
-apts = load_category_from_file('data/words_apts.csv')
-nths = load_category_from_file('nth.csv')
-dirs = load_category_from_file('dirs.csv')
-arti = load_category_from_file('data/words_arti.csv')
-pre  = load_category_from_file('pre.csv')
-deleg = load_category_from_file('deleg.csv')
-wordways = load_category_from_file('data/words_word_way.csv')
-gfeatures = load_category_from_file('data/words_gfeatures.csv')
-sp_arti = load_category_from_file('data/words_sp_arti.csv')
-sp_way = load_category_from_file('data/words_sp_way.csv')
-sp_pre = load_category_from_file('data/words_sp_pre.csv')
-word_numbers = load_category_from_file('data/words_numbers.csv')
-apts_base = load_category_from_file_no_bookends('data/words_apts.csv')
-# http://maf.directory/zp4/abbrev.html
-
-
 
 # THOU SHALL NOT SEQUENCE THREE ALPHAS IN A ROW!
 def train_with_provided_list(seq, matrix_lst):
     """matrix list means [['DIGIT'],['ALPHA'],['WAY']] for example"""
+    print(matrix_lst)
     return seq.insert(matrix_lst, is_learning=True).get_next_values()
 
 
@@ -65,29 +30,14 @@ def train_sequences_from_file(_seq, filepath, lst_lst_identifier):
             if len(str_sequence.strip()) == 0:
                 continue
             else:
-                #print("::",str_sequence)
                 lst_sequence = eval(str_sequence)
                 train_with_provided_list(_seq, lst_sequence + lst_lst_identifier)
 
-train_sequences_from_file(seq, 'data/address_suite.csv', [['_SUITE_']])
-train_sequences_from_file(seq, 'data/address_bases.csv', [['_ADDRESS_']])
-train_with_provided_list(seq, [['DIR'],['_DIR_']])
-train_sequences_from_file(seq, 'data/address_poboxs.csv', [['_POBOX_']])
 
+seq = Hydraseq('input')
+for typ in ['suite', 'address', 'dir', 'pobox', 'attn']:
+    train_sequences_from_file(seq, 'data/address_{}.csv'.format(typ), [['_{}_'.format(typ.upper())]])
 
-
-
-# valid attn
-train_samples = [
-    ("c/o john smith",              [['DELEG'],['ALPHA'],['ALPHA']]),
-    ("attn john smith",             [['DELEG'],['ALPHA'],['ALPHA']]),
-    ("attn: john smith",            [['DELEG'],['ALPHA'],['ALPHA']]),
-    ("c/o john", [['DELEG'],        ['ALPHA']]),
-    ("c/o dell&schaefer law firm",  [['DELEG'], ['ALPHA'], ['AND'], ['ALPHA'], ['ALPHA'], ['ALPHA']]),
-]
-for ts, matrix_lst in train_samples:
-    matrix_lst.append(['_ATTN_'])
-    train_with_provided_list(seq, matrix_lst)
 
 def encode_from_word_list(arr_st):
     """Expects ['123', 'main', 'st]"""
@@ -136,65 +86,58 @@ def get_markers(seq, sent, lst_targets):
     return markers
 
 
+class BreathFirstSearch:
+    """Relies on the structure of nodes to follow the output of get_markers
+        [start, end+1, length, [type], str_rep]
+    """
+    def __init__(self, markers):
+        self.markers = markers
+    def end(self, node):
+        return node[1]
+    def start(self, node):
+        return node[0]
+    def type(self, node):
+        return node[3][0]
+    def length(self, node):
+        return node[2]
+    def rep(self, node):
+        return node[4]
+    def get_successors(self, current_node):
+        next_matches = [n for n in self.markers if self.start(n) == self.end(current_node) and self.type(n) != self.type(current_node) and self.type(n) != '_POBOX_']
+        return next_matches[:]
+    def get_branches(self, node):
+        fringe = [[node[:]]]
+        branches = []
+        while fringe:
+            activeNode = fringe.pop()
+            successors = self.get_successors(activeNode[-1])
+            if successors:
+                for successor in successors:
+                    nextNode = activeNode[:]
+                    nextNode.append(successor)
+                    fringe.append(nextNode[:])
+            else:
+                branches.append(activeNode)
+        return branches
+    def get_all_branches(self):
+        all_branches = []
+        for node in self.markers:
+            for branch in self.get_branches(node):
+                all_branches.append(branch)
+        return all_branches
 
 
 
+seq2 = Hydraseq('second')
+for typ in ['keep']:
+    train_sequences_from_file(seq2, 'data/address_{}.csv'.format(typ), [['_{}_'.format(typ.upper())]])
 
-
-
-
-
-
-### DOUBLE DECKER APPROACH
 def return_max_address4(seq, sent):
+
     markers = get_markers(seq, sent, ['_ADDRESS_', '_POBOX_', '_SUITE_', '_DIR_'])
-    class BreathFirstSearch:
-        def __init__(self, markers):
-            self.markers = markers
-        def end(self, node):
-            return node[1]
-        def start(self, node):
-            return node[0]
-        def type(self, node):
-            return node[3][0]
-        def length(self, node):
-            return node[2]
-        def rep(self, node):
-            return node[4]
-        def get_successors(self, current_node):
-            next_matches = [n for n in self.markers if self.start(n) == self.end(current_node) and self.type(n) != self.type(current_node) and self.type(n) != '_POBOX_']
-            return next_matches[:]
-        def get_branches(self, node):
-            fringe = [[node[:]]]
-            branches = []
-            while fringe:
-                activeNode = fringe.pop()
-                successors = self.get_successors(activeNode[-1])
-                if successors:
-                    for successor in successors:
-                        nextNode = activeNode[:]
-                        nextNode.append(successor)
-                        fringe.append(nextNode[:])
-                else:
-                    branches.append(activeNode)
-            return branches
-        def get_all_branches(self):
-            all_branches = []
-            for node in self.markers:
-                for branch in self.get_branches(node):
-                    all_branches.append(branch)
-            return all_branches
-
     bfs = BreathFirstSearch(markers)
-    seq2 = Hydraseq('second')
-    seq2.insert("_SUITE_ _ADDRESS_ *KEEP*")
-    seq2.insert("_ADDRESS_ *KEEP*")
-    seq2.insert("_ADDRESS_ _SUITE_ *KEEP*")
-    seq2.insert("_ADDRESS_ _DIR_ *KEEP*")
-    seq2.insert("_ADDRESS_ _DIR_ _SUITE_ *KEEP*")
-    seq2.insert("_POBOX_ *KEEP*")
-    keepers = [branch for branch in bfs.get_all_branches() if 'KEEP' in seq2.look_ahead([node[3] for node in branch] ).get_next_values()]
 
+    keepers = [branch for branch in bfs.get_all_branches() if '_KEEP_' in seq2.look_ahead([node[3] for node in branch] ).get_next_values()]
     max_len = 0
     max_branch = None
     for branch in keepers:
@@ -203,15 +146,4 @@ def return_max_address4(seq, sent):
             max_len = len_branch
             max_branch = branch
 
-    #print("HERE: ",max_branch)
     return " ".join([item[4] for item in max_branch])
-
-if __name__ == "__main__":
-    #################################################################################
-    import pandas as pd
-    df = pd.read_csv('data/badboys.csv')
-    df_addresses = df[['ACCT_STREET_ADDR']]
-    df_addresses.drop_duplicates(keep='first', inplace=True)
-    df_addresses['NEW ADDRESS'] = df_addresses['ACCT_STREET_ADDR'].apply(lambda x: return_max_address(seq, x))
-    df_addresses.to_csv('processed.csv')
-    os.system("open 'processed.csv'")

@@ -45,6 +45,7 @@ def test_multiple_markers():
 
 def test_shortlist():
     shortlist = [
+        ("2724 CARL T JONES DR SE","2724 CARL T JONES DR SE","This keeps dropping SE when I use _DIR_ from file"),
         ("10 1ST AVE RM 26","10 1ST AVE RM 26","don't drop the 10 in front"),
         ("1 HILLCREST CENTER DRIVE ST 225",    "1 HILLCREST CENTER DRIVE ST 225", "Don't drop the ST"),
         ("8690 SIERRA COLLEGE BLVD STE",       "8690 SIERRA COLLEGE BLVD",        "Drop the extra STE"),
