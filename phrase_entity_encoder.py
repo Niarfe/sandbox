@@ -15,24 +15,29 @@ def load_category_from_file_no_bookends(fpath):
         ways = [line.strip().lower() for line in source]
     return r'(' + "|".join(ways) + r')'
 
-negatives = load_category_from_file('data/words_non_address.csv')
-ways = load_category_from_file('data/words_way.csv')
-common_street = load_category_from_file('data/words_common_street.csv')
-structures = load_category_from_file('data/words_structures.csv')
-preps = load_category_from_file('data/words_preps.csv')
-conjs = load_category_from_file('data/words_conjs.csv')
-apts = load_category_from_file('data/words_apts.csv')
-nths = load_category_from_file('nth.csv')
-dirs = load_category_from_file('dirs.csv')
-arti = load_category_from_file('data/words_arti.csv')
-pre  = load_category_from_file('pre.csv')
-deleg = load_category_from_file('deleg.csv')
-wordways = load_category_from_file('data/words_word_way.csv')
-gfeatures = load_category_from_file('data/words_gfeatures.csv')
-sp_arti = load_category_from_file('data/words_sp_arti.csv')
-sp_way = load_category_from_file('data/words_sp_way.csv')
-sp_pre = load_category_from_file('data/words_sp_pre.csv')
-word_numbers = load_category_from_file('data/words_numbers.csv')
+drex = {}
+for var in [
+    'negatives',
+    'ways',
+    'common_street',
+    'structures',
+    'preps',
+    'conjs',
+    'apts',
+    'nths',
+    'dirs',
+    'arti',
+    'pre',
+    'deleg',
+    'wordways',
+    'gfeatures',
+    'sp_arti',
+    'sp_way',
+    'sp_pre',
+    'numbers'
+    ]:
+    drex[var] = load_category_from_file('data/words_{}.csv'.format(var, var))
+
 apts_base = load_category_from_file_no_bookends('data/words_apts.csv')
 # http://maf.directory/zp4/abbrev.html
 
@@ -49,29 +54,29 @@ def encoder(word, trim=True):
             ('POST',        [r'^p$', r'^post$' ]),
             ('OFFICE',      [r'^o$', r'^office$' ]),
             ('TH',          [r'^th$' ]),
-            ('WAY',         [ ways]),
-            ('WORDWAY',     [ wordways ]),
-            ('COMMONST',    [ common_street ]),
-            ('GFEATURE',    [ gfeatures ]),
-            ('STRUCTURE',    [ structures ]),
-            ('APT',         [ apts ]),
-            ('ARTI',        [ arti ]),
-            ('PREP',        [ preps ]),
-            ('CONJ',        [ conjs ]),
+            ('WAY',         [ drex['ways'] ]),
+            ('WORDWAY',     [ drex['wordways'] ]),
+            ('COMMONST',    [ drex['common_street'] ]),
+            ('GFEATURE',    [ drex['gfeatures'] ]),
+            ('STRUCTURE',   [ drex['structures'] ]),
+            ('APT',         [ drex['apts'] ]),
+            ('ARTI',        [ drex['arti'] ]),
+            ('PREP',        [ drex['preps'] ]),
+            ('CONJ',        [ drex['conjs'] ]),
             ('WAYCOKY',      [ r'^county$', r'^co$', r'^ky$', r'^state$', r'^us$' ]), # county and co show up in '123 CO RD 456'
-            ('SP_ARTI',     [ sp_arti ]),
-            ('SP_WAY',      [ sp_way ]),
-            ('SP_PRE',      [ sp_pre ]),
+            ('SP_ARTI',     [ drex['sp_arti'] ]),
+            ('SP_WAY',      [ drex['sp_way'] ]),
+            ('SP_PRE',      [ drex['sp_pre'] ]),
             ('FARM2MARK',   [ r'^fm$' ]),
-            ('PRE',         [ pre ]),
-            ('DIR',         [ dirs ]),
+            ('PRE',         [ drex['pre'] ]),
+            ('DIR',         [ drex['dirs'] ]),
             ('POB2',        [ r'^box$', r'^bxo$' ]),
             ('POBHC',       [ r'^(hc|rr)$' ]),
             ('POBOX1',       [ r'^pobox$' ]),
             ('DRAWER',       [ r'^drawer$' ]),
             ('DELEG',       [ r'^attn$', r'^attn:$', r'^c\/o$', r'^co$' ]),
             ('POB0',        [ r'^po$', r'^p\.o\.$' ]),
-            ('NEGATIVE',        [ negatives ]),
+            ('NEGATIVE',        [ drex['negatives'] ]),
         # NUMBERS ONLY
         ('DIGIT',           [r'^\d+$']),
         ('DIGDASH',         [ r'\d+-\d+$' ]),
@@ -79,7 +84,7 @@ def encoder(word, trim=True):
         ('DASH',            [ r'^-$' ]),
 
         # MIXED LETTERS AND NUMBERS
-        ('ADR_HEAD',        [r'^\d+$', word_numbers, r'^[nsew]\d+$', r'^#\d+$', r'\d+-\d+$', r'^[nsew]\d+[nsew]\d+$',
+        ('ADR_HEAD',        [r'^\d+$', drex['numbers'], r'^[nsew]\d+$', r'^#\d+$', r'\d+-\d+$', r'^[nsew]\d+[nsew]\d+$',
                                 rex_gigit_direction,
                                 rex_digdashal,
                                 rex_oneal_digits,
@@ -90,7 +95,7 @@ def encoder(word, trim=True):
             ('BOXNUM',      [r'^box\d+$']),
             ('ALDASHDIG',   [r'^[a-z]+-\d+$'] ),
             ('NUMSTR',      [r'^\d+[a-z]+$' ]),
-                ('NTH',     [ nths, r'^[nsew]\d+(rd|st|th)' ]),
+                ('NTH',     [ drex['nths'], r'^[nsew]\d+(rd|st|th)' ]),
                 ('NUMS_1AL',[ r'^\d+[a-z]$' ]),
                 ('APT_NUM', [r'^' + apts_base + r'\d+$', r'^' + apts_base + r'[a-z]$', rex_alnumdashnum ]),
                 ('DIG-DIGTH', [ r'^\d+-\d+(th|st|rd)$' ]),
@@ -112,7 +117,9 @@ def encoder(word, trim=True):
         ('ATTN', [r'^:deleg$']),
         ('POBOX', [r'^:box$']),
     ]
+    
     encoding = [key for key, rexs in encodings for rex in rexs if re.match(rex, word)]
+    
     if not trim:
         return encoding
     else:
