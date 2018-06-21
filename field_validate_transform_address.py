@@ -6,86 +6,6 @@ from phrase_entity_encoder import encoder
 import logging
 #from field_transforms import trace_transform_replaced
 
-def tokenize_to_list(str_sentence):
-    str_sentence = str(str_sentence)
-    return re.findall(r"[\w'/\-:#]+|[,!?&]", str_sentence)
-
-
-# THOU SHALL NOT SEQUENCE THREE ALPHAS IN A ROW!
-def train_with_provided_list(seq, matrix_lst):
-    """matrix list means [['DIGIT'],['ALPHA'],['WAY']] for example"""
-    return seq.insert(matrix_lst, is_learning=True).get_next_values()
-
-
-def train_sequences_from_file(_seq, filepath, lst_lst_identifier):
-    """Insert training sequences from stored file.
-        _seq    - a live Hydra sequencer to train
-        filepath    - csv two column file, second column 'SEQUENCE' contains lists of lists
-        lst_lst_identifier  - what identifier to use to cap seqennces, [['mysequence']] for example
-    """
-    with open(filepath, 'r') as source:
-        csv_file = csv.DictReader(source)
-        for row in csv_file:
-            str_sequence = row['SEQUENCE'].strip()
-            if len(str_sequence.strip()) == 0:
-                continue
-            else:
-                lst_sequence = eval(str_sequence)
-                train_with_provided_list(_seq, lst_sequence + lst_lst_identifier)
-
-
-seq = Hydraseq('input')
-for typ in ['suite', 'address', 'dir', 'pobox', 'attn']:
-    train_sequences_from_file(seq, 'data/address_{}.csv'.format(typ), [['_{}_'.format(typ.upper())]])
-
-
-def encode_from_word_list(arr_st):
-    """Expects ['123', 'main', 'st]"""
-    assert isinstance(arr_st, list)
-    if arr_st: assert isinstance(arr_st[0], str)
-    return [encoder(word) for word in arr_st]
-
-def is_address(seq, arr_st):
-    """Expects ["123","main","st"]"""
-    return any([pred == '_ADDRESS_' for pred in seq.look_ahead(encode_from_word_list(arr_st)).get_next_values()])
-
-def is_pobox(seq, arr_st):
-    """Expects ["123","main","st"]"""
-    assert isinstance(arr_st, list)
-    return any([pred == '_POBOX_' for pred in seq.look_ahead(encode_from_word_list(arr_st)).get_next_values()])
-
-
-def is_deleg(seq, arr_st):
-    """Expects ["123","main","st"]"""
-    assert isinstance(arr_st, list)
-    return any([pred == '_ATTN_' for pred in seq.look_ahead(encode_from_word_list(arr_st)).get_next_values()])
-
-def is_suite(seq, st):
-    """Expects ["123","main","st"]"""
-    assert isinstance(st, str)
-    return any([pred == '_SUITE_' for pred in seq.look_ahead(encode_from_word_list(tokenize_to_list(st))).get_next_values()])
-
-def get_markers(seq, sent, lst_targets):
-    """Input is like '123 main str' and returns a list of lists
-        RETURNS: a list of list, each list being a candidate and having these values.
-            idx_beg, idx_end, length, matches (ADDRESS etc), sequence
-        ATTN!!  this lowercases stuff, TODO: Generalize this so it doesn't need lowercasing
-    """
-    sent = str(sent).lower().strip()
-    arr_w = tokenize_to_list(sent)
-    idx_tail = len(arr_w)
-    markers = []
-
-    for idx_beg in range(idx_tail):
-        for idx_end in range(idx_beg + 1, idx_tail +1):
-            next_values = seq.look_ahead(encode_from_word_list(arr_w[idx_beg:idx_end])).get_next_values()
-            matches = list(set(next_values) & set(lst_targets) )
-            if matches:
-                markers.append([idx_beg, idx_end, idx_end - idx_beg, matches, ' '.join(arr_w[idx_beg:idx_end])])
-
-    return markers
-
-
 class BreathFirstSearch:
     """Relies on the structure of nodes to follow the output of get_markers
         [start, end+1, length, [type], str_rep]
@@ -126,26 +46,136 @@ class BreathFirstSearch:
                 all_branches.append(branch)
         return all_branches
 
+class Sequencer:
+    def __init__(self):
+        self.seq  = self.initialize_seq(['suite', 'address', 'dir', 'pobox', 'attn'], 'data/address', 'first')
+        self.seq2 = self.initialize_seq(['keep'], 'data/address', 'second')
+
+    def initialize_seq(self, lst_typs, fpath, id):
+        seq = Hydraseq(id)
+        for typ in lst_typs:
+            self.train_sequences_from_file(seq, '{}/{}.csv'.format(fpath, typ), [['_{}_'.format(typ.upper())]])
+        return seq
+
+    def tokenize_to_list(self, str_sentence):
+        str_sentence = str(str_sentence)
+        return re.findall(r"[\w'/\-:#]+|[,!?&]", str_sentence)
+
+    def train_sequences_from_file(self, _seq, filepath, lst_lst_identifier):
+        """Insert training sequences from stored file.
+            _seq    - a live Hydra sequencer to train
+            filepath    - csv two column file, second column 'SEQUENCE' contains lists of lists
+            lst_lst_identifier  - what identifier to use to cap seqennces, [['mysequence']] for example
+        """
+        with open(filepath, 'r') as source:
+            csv_file = csv.DictReader(source)
+            for row in csv_file:
+                str_sequence = row['SEQUENCE'].strip()
+                if len(str_sequence.strip()) == 0:
+                    continue
+                else:
+                    lst_sequence = eval(str_sequence)
+                    self.train_with_provided_list(_seq, lst_sequence + lst_lst_identifier)
 
 
-seq2 = Hydraseq('second')
-for typ in ['keep']:
-    train_sequences_from_file(seq2, 'data/address_{}.csv'.format(typ), [['_{}_'.format(typ.upper())]])
+    def train_with_provided_list(self, seq, matrix_lst):
+        """matrix list means [['DIGIT'],['ALPHA'],['WAY']] for example"""
+        return seq.insert(matrix_lst, is_learning=True).get_next_values()
 
 
-convert_high_address_validate_transform_map = {}
-#@trace_transform_replaced
-def convert_high_address_validate_transform(sent, _address_map={}):
+    def encode_from_word_list(self, arr_st):
+        """Expects ['123', 'main', 'st]"""
+        assert isinstance(arr_st, list)
+        if arr_st: assert isinstance(arr_st[0], str)
+        return [encoder(word) for word in arr_st]
 
-    markers = get_markers(seq, sent, ['_ADDRESS_', '_POBOX_', '_SUITE_', '_DIR_'])
-    bfs = BreathFirstSearch(markers)
-    keepers = [branch for branch in bfs.get_all_branches() if '_KEEP_' in seq2.look_ahead([node[3] for node in branch] ).get_next_values()]
-    max_len = 0
-    max_branch = []
-    for branch in keepers:
-        len_branch = branch[-1][1] - branch[0][0]
-        if len_branch > max_len:
-            max_len = len_branch
-            max_branch = branch
 
-    return " ".join([item[4] for item in max_branch])
+    def get_markers(self, sent, lst_targets):
+        """Input is like '123 main str' and returns a list of lists
+            RETURNS: a list of list, each list being a candidate and having these values.
+                idx_beg, idx_end, length, matches (ADDRESS etc), sequence
+            ATTN!!  this lowercases stuff, TODO: Generalize this so it doesn't need lowercasing
+        """
+        sent = str(sent).lower().strip()
+        arr_w = self.tokenize_to_list(sent)
+        idx_tail = len(arr_w)
+        markers = []
+
+        for idx_beg in range(idx_tail):
+            for idx_end in range(idx_beg + 1, idx_tail +1):
+                next_values = self.seq.look_ahead(self.encode_from_word_list(arr_w[idx_beg:idx_end])).get_next_values()
+                matches = list(set(next_values) & set(lst_targets) )
+                if matches:
+                    markers.append([idx_beg, idx_end, idx_end - idx_beg, matches, ' '.join(arr_w[idx_beg:idx_end])])
+
+        return markers
+
+
+    convert_high_address_validate_transform_map = {}
+    #@trace_transform_replaced
+    def convert_high_address_validate_transform(self, sent, _address_map={}):
+
+        markers = self.get_markers(sent, ['_ADDRESS_', '_POBOX_', '_SUITE_', '_DIR_'])
+        print("MARKERS: ", markers)
+        bfs = BreathFirstSearch(markers)
+        keepers = [branch for branch in bfs.get_all_branches() if '_KEEP_' in self.seq2.look_ahead([node[3] for node in branch]).get_next_values()]
+        print("KEEPERS: ", keepers)
+        keepers_address = [branch for branch in keepers for marker in branch if marker[3][0] == '_ADDRESS_']
+        print("KEEPERS_ADDRESS", keepers_address)
+        if keepers_address:
+            keepers = keepers_address
+        max_len = 0
+        max_branch = []
+        for branch in keepers:
+            len_branch = branch[-1][1] - branch[0][0]
+            if len_branch > max_len:
+                max_len = len_branch
+                max_branch = branch
+
+        return " ".join([item[4] for item in max_branch])
+
+    def convert_high_address_validate_transform2(sent, _address_map={}):
+        markers = self.get_markers(sent, ['_ADDRESS_', '_POBOX_', '_SUITE_', '_DIR_'])
+
+        bfs = BreathFirstSearch(markers)
+        keepers = [branch for branch in bfs.get_all_branches() if '_KEEP_' in seq2.look_ahead([node[3] for node in branch] ).get_next_values()]
+        max_len = 0
+        max_branch = []
+        for branch in keepers:
+            len_branch = branch[-1][1] - branch[0][0]
+            if len_branch > max_len:
+                max_len = len_branch
+                max_branch = branch
+
+        return " ".join([item[4] for item in max_branch]), keepers, markers, max_branch
+
+    # def is_address(seq, arr_st):
+    #     """Expects ["123","main","st"]"""
+    #     return any([pred == '_ADDRESS_' for pred in seq.look_ahead(encode_from_word_list(arr_st)).get_next_values()])
+
+    # def is_pobox(seq, arr_st):
+    #     """Expects ["123","main","st"]"""
+    #     assert isinstance(arr_st, list)
+    #     return any([pred == '_POBOX_' for pred in seq.look_ahead(encode_from_word_list(arr_st)).get_next_values()])
+
+
+    # def is_deleg(seq, arr_st):
+    #     """Expects ["123","main","st"]"""
+    #     assert isinstance(arr_st, list)
+    #     return any([pred == '_ATTN_' for pred in seq.look_ahead(encode_from_word_list(arr_st)).get_next_values()])
+
+    # def is_suite(seq, st):
+    #     """Expects ["123","main","st"]"""
+    #     assert isinstance(st, str)
+    #     return any([pred == '_SUITE_' for pred in seq.look_ahead(encode_from_word_list(tokenize_to_list(st))).get_next_values()])
+
+sequencer = Sequencer()
+
+if __name__ == "__main__":
+    print("DO IT")
+    print(sequencer.convert_high_address_validate_transform("123 main st po box 456"))
+    print(sequencer.convert_high_address_validate_transform("it was 456 charleston hwy suite 7 po box 777"))
+    print(sequencer.convert_high_address_validate_transform("four score po box 456"))
+    print(sequencer.convert_high_address_validate_transform("123 main po box 456"))
+    print(sequencer.convert_high_address_validate_transform("123 main st po box 456"))
+    print(sequencer.convert_high_address_validate_transform("c/o john doe 123 main st po box 456"))

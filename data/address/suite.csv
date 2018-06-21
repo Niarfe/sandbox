@@ -1,0 +1,43 @@
+ADDRESSES,SEQUENCE
+B102,[['ALNUM']]
+1300,[['DIGIT']]
+2 SOUTH,"[['DIGIT'], ['DIR']]"
+SUITE 2 SOUTH,"[['APT'], ['DIGIT'], ['DIR']]"
+13A,[['NUMS_1AL']]
+23-24,[['DIGDASH']]
+#e-1,[['PND_AL_DASH_DIG']]
+#151-103,[['PND_DIG_DASH_DIG']]
+2310-w,[['DIGDASHAL']]
+E,[['LETTER']]
+STEC,[['APT_NUM']]
+#177,[['POUNDDIG']]
+#ph,[['PND_ALPHA']]
+14TH FL,"[['NTH'], ['APT']]"
+STE ABC,"[['APT'], ['ALPHA']]"
+APT F15,"[['APT'], ['ALNUM']]"
+STE 141,"[['APT'], ['DIGIT']]"
+UNIT B2-2,"[['APT'], ['APT_NUM']]"
+SUITE 401 UNIT C29,"[['APT'], ['DIGIT'], ['APT'], ['ALNUM']]"
+STE 141 142,"[['APT'], ['DIGIT'],['DIGIT']]"
+UNIT B 1,"[['APT'], ['LETTER'], ['DIGIT']]"
+BLDG E STE 207,"[['APT'], ['LETTER'], ['APT'], ['DIGIT']]"
+SUITE # 288,"[['APT'], ['POUND'],['DIGIT']]"
+BLDG 2 UNIT 202,"[['APT'],['DIGIT'],['APT'],['DIGIT']]"
+STE 141-142,"[['APT'], ['DIGDASH']]"
+STE 6-A,"[['APT'], ['DIGDASHAL']]"
+APT B-1,"[['APT'], ['ALDASHDIG']]"
+STE C,"[['APT'], ['LETTER']]"
+APT 3K,"[['APT'], ['NUMS_1AL']]"
+# ABC,"[['POUND'], ['ALPHA']]"
+# b,"[['POUND'], ['ALNUM']]"
+# 2,"[['POUND'], ['DIGIT']]"
+9 NORTH # 2,"[['DIGIT'], ['DIR'], ['POUND'], ['DIGIT']]"
+# 2-3,"[['POUND'], ['DIGDASH']]"
+# 6-A,"[['POUND'], ['DIGDASHAL']]"
+# b,"[['POUND'], ['LETTER']]"
+# 100A,"[['POUND'],['NUMS_1AL']]"
+APT 21 J,"[['APT'], ['DIGIT'], ['LETTER']]"
+apt #707,"[['APT'], ['POUNDDIG']]"
+1st floor apt 1,"[['NTH'], ['APT'], ['APT'], ['DIGIT']]"
+building 2,"[['STRUCTURE'], ['DIGIT']]"
+loop 323 suite d,"[['APT'], ['DIGIT'], ['APT'], ['LETTER']]"
