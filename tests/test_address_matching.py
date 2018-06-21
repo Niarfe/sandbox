@@ -1,5 +1,6 @@
 import csv
 import os
+import pytest
 import sys
 sys.path.append(".")
 os.chdir("{}/../".format(os.path.dirname(os.path.realpath(__file__))))
@@ -171,6 +172,14 @@ def test_shortlist():
     ]
     for address, expected, note in shortlist:
         assert sequencer.convert_high_address_validate_transform(address) == " ".join(sequencer.tokenize_to_list(expected.lower())), sequencer.get_markers(expected.lower(),['_ADDRESS_', '_POBOX_', '_SUITE_', '_DIR_']) #'{},"{}"'.format(expected.lower(), sequencer.encode_from_word_list(sequencer.tokenize_to_list(expected.lower())))
+
+@pytest.mark.xfail
+def test_expected_to_fail():
+    shortlist = [
+          ("3970 REBECK RD East St Paul","3970 REBECK RD","[[0, 4, 4, ['ADDRESS'], '3970 rebeck rd east']]"),
+    ]
+    for address, expected, note in shortlist:
+        assert vtad.convert_high_address_validate_transform(address) == " ".join(vtad.tokenize_to_list(expected.lower())), '{},"{}"'.format(expected.lower(),vtad.encode_from_word_list(vtad.tokenize_to_list(expected.lower())))
 
 def test_incompletes():
     incompletes = [
