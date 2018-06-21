@@ -47,6 +47,7 @@ def test_multiple_markers():
 
 def test_shortlist():
     shortlist = [
+        ("po box 456 123 main st", "123 main st", "do not pick up from pobox"),
         ("123 main po box 456", "123 main", "choose address over pobox"),
         ("535 W GYPSY LN RD LOT 330","535 W GYPSY LN RD LOT 330","drops suite"),
         ("21W487 TANAGER COURT","21W487 TANAGER COURT","drops it all"),

@@ -23,7 +23,7 @@ class BreathFirstSearch:
     def rep(self, node):
         return node[4]
     def get_successors(self, current_node):
-        next_matches = [n for n in self.markers if self.start(n) == self.end(current_node) and self.type(n) != self.type(current_node) and self.type(n) != '_POBOX_']
+        next_matches = [n for n in self.markers if self.start(n) == self.end(current_node) and (self.type(n) != self.type(current_node))]# and (self.type(n) != '_POBOX_')]
         return next_matches[:]
     def get_branches(self, node):
         fringe = [[node[:]]]
@@ -113,7 +113,7 @@ class Sequencer:
 
     convert_high_address_validate_transform_map = {}
     #@trace_transform_replaced
-    def convert_high_address_validate_transform(self, sent, _address_map={}):
+    def convert_high_address_validate_transform(self, sent, _address_map={}, allthree=False):
 
         markers = self.get_markers(sent, ['_ADDRESS_', '_POBOX_', '_SUITE_', '_DIR_'])
         print("MARKERS: ", markers)
@@ -123,7 +123,7 @@ class Sequencer:
         keepers_address = [branch for branch in keepers for marker in branch if marker[3][0] == '_ADDRESS_']
         print("KEEPERS_ADDRESS", keepers_address)
         if keepers_address:
-            keepers = keepers_address
+            pass #keepers = keepers_address
         max_len = 0
         max_branch = []
         for branch in keepers:
@@ -132,7 +132,10 @@ class Sequencer:
                 max_len = len_branch
                 max_branch = branch
 
-        return " ".join([item[4] for item in max_branch])
+        if allthree:
+            return " ".join([item[4] for item in max_branch]), markers, keepers
+        else:
+            return " ".join([item[4] for item in max_branch])
 
     def convert_high_address_validate_transform2(sent, _address_map={}):
         markers = self.get_markers(sent, ['_ADDRESS_', '_POBOX_', '_SUITE_', '_DIR_'])
@@ -172,10 +175,7 @@ class Sequencer:
 sequencer = Sequencer()
 
 if __name__ == "__main__":
-    print("DO IT")
-    print(sequencer.convert_high_address_validate_transform("123 main st po box 456"))
-    print(sequencer.convert_high_address_validate_transform("it was 456 charleston hwy suite 7 po box 777"))
-    print(sequencer.convert_high_address_validate_transform("four score po box 456"))
-    print(sequencer.convert_high_address_validate_transform("123 main po box 456"))
-    print(sequencer.convert_high_address_validate_transform("123 main st po box 456"))
-    print(sequencer.convert_high_address_validate_transform("c/o john doe 123 main st po box 456"))
+    with open('addresses2.csv', 'r') as source:
+        for line in source:
+            expected, markers, keepers = sequencer.convert_high_address_validate_transform(line.lower(), {}, allthree=True)
+            print(line.strip(), ',"', expected,'","', markers,'","', keepers, '"')
