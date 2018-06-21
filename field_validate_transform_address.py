@@ -116,14 +116,10 @@ class Sequencer:
     def convert_high_address_validate_transform(self, sent, _address_map={}, allthree=False):
 
         markers = self.get_markers(sent, ['_ADDRESS_', '_POBOX_', '_SUITE_', '_DIR_'])
-        print("MARKERS: ", markers)
+        #print("MARKERS: ", markers)
         bfs = BreathFirstSearch(markers)
+        all_branches = bfs.get_all_branches()
         keepers = [branch for branch in bfs.get_all_branches() if '_KEEP_' in self.seq2.look_ahead([node[3] for node in branch]).get_next_values()]
-        print("KEEPERS: ", keepers)
-        keepers_address = [branch for branch in keepers for marker in branch if marker[3][0] == '_ADDRESS_']
-        print("KEEPERS_ADDRESS", keepers_address)
-        if keepers_address:
-            pass #keepers = keepers_address
         max_len = 0
         max_branch = []
         for branch in keepers:
@@ -132,8 +128,11 @@ class Sequencer:
                 max_len = len_branch
                 max_branch = branch
 
+        if any([node[3][0] == '_POBOX_' for node in max_branch]) and any([node[3][0] == '_ADDRESS_' for node in max_branch]):
+            max_branch = [node for node in max_branch if node[3][0] != '_POBOX_']
+
         if allthree:
-            return " ".join([item[4] for item in max_branch]), markers, keepers
+            return " ".join([item[4] for item in max_branch]), max_branch, markers, all_branches, keepers
         else:
             return " ".join([item[4] for item in max_branch])
 
@@ -177,5 +176,5 @@ sequencer = Sequencer()
 if __name__ == "__main__":
     with open('addresses2.csv', 'r') as source:
         for line in source:
-            expected, markers, keepers = sequencer.convert_high_address_validate_transform(line.lower(), {}, allthree=True)
-            print(line.strip(), ',"', expected,'","', markers,'","', keepers, '"')
+            expected,max_branch, markers,all_branches, keepers = sequencer.convert_high_address_validate_transform(line.lower(), {}, allthree=True)
+            print(line.strip(), ',"', expected,'","', max_branch, '","', markers,'","', all_branches, '","',keepers, '"')

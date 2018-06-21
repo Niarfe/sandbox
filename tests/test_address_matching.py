@@ -59,7 +59,7 @@ def test_shortlist():
         ("N 7940 HWY E","N 7940 HWY E","didn't even get partial crediat"),
         ("1700 J STREET APT #707","1700 J STREET APT #707","Drops that apt"),
         ("300 9TH ST NORTHEAST","300 9TH ST NORTHEAST","Doesn't see last DIR"),
-        ("102 WEST NORTH BOX 278","102 WEST NORTH BOX 278","it kept the wrong side!"),
+        ("102 WEST NORTH BOX 278","102 WEST NORTH","it kept the wrong side!"),
         ("1377 E FLORENCE BLVD #151-103","1377 E FLORENCE BLVD #151-103","Dropped suites"),
         ("117 SOUTH 13TH ST 1ST FLOOR APT 1","117 SOUTH 13TH ST 1ST FLOOR APT 1","drops apt 1"),
         ("10237 RED LION TAVERN","10237 RED LION TAVERN","Drops Tavern"),
