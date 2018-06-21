@@ -36,9 +36,9 @@ for var in [
     'sp_pre',
     'numbers'
     ]:
-    drex[var] = load_category_from_file('data/words_{}.csv'.format(var, var))
+    drex[var] = load_category_from_file('data/address/{}.csv'.format(var, var))
 
-apts_base = load_category_from_file_no_bookends('data/words_apts.csv')
+apts_base = load_category_from_file_no_bookends('data/address/apts.csv')
 # http://maf.directory/zp4/abbrev.html
 
 def encoder(word, trim=True):
@@ -71,7 +71,7 @@ def encoder(word, trim=True):
             ('FARM2MARK',   [ r'^fm$' ]),
             ('PRE',         [ drex['pre'] ]),
             ('DIR',         [ drex['dirs'] ]),
-            ('POB2',        [ r'^box$', r'^bxo$' ]),
+            ('POB2',        [ r'^box$', r'^bxo$', r'^mailstop$' ]),
             ('POBHC',       [ r'^(hc|rr)$' ]),
             ('POBOX1',       [ r'^pobox$' ]),
             ('DRAWER',       [ r'^drawer$' ]),

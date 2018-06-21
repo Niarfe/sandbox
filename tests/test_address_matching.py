@@ -47,6 +47,8 @@ def test_multiple_markers():
 
 def test_shortlist():
     shortlist = [
+        ("100 CAPITOLA DRIVE STD 275","100 CAPITOLA DRIVE STD 275",""),
+        ("4189 nunc road lebanon", "4189 nunc road", "do not confuse city with address"),
         ("po box 456 123 main st", "123 main st", "do not pick up from pobox"),
         ("123 main po box 456", "123 main", "choose address over pobox"),
         ("535 W GYPSY LN RD LOT 330","535 W GYPSY LN RD LOT 330","drops suite"),
