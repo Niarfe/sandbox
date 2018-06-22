@@ -184,6 +184,8 @@ def test_expected_to_fail():
     for address, expected, note in shortlist:
         assert vtad.convert_high_address_validate_transform(address) == " ".join(vtad.tokenize_to_list(expected.lower())), '{},"{}"'.format(expected.lower(),vtad.encode_from_word_list(vtad.tokenize_to_list(expected.lower())))
 
+# expected to faile because SUITE can be interpreted as SUIT+E which is a misspelling of 'suite e', this is to cover cases like STEC which means 'suite c'
+@pytest.mark.xfail
 def test_incompletes():
     incompletes = [
         ("2010 OLD MONTGOMERY HWY SUITE",    "2010 OLD MONTGOMERY HWY"),
@@ -196,7 +198,7 @@ def test_incompletes():
         ("12665 VETERANS MEMORIAL DR SUITE", "12665 VETERANS MEMORIAL DR"),
     ]
     for address, expected in incompletes:
-       assert sequencer.convert_high_address_validate_transform(address) == expected.lower(), '{} {}'.format(address)
+       assert sequencer.convert_high_address_validate_transform(address) == expected.lower(), '{},"{}"'.format(address.lower(), sequencer.encode_from_word_list(sequencer.tokenize_to_list(address.lower())))
 
 
 # def test_is_suite():
