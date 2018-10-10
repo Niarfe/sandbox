@@ -1,0 +1,6 @@
+ADDRESSES,SEQUENCE
+c/o john smith,"[['DELEG'], ['ALPHA'],['ALPHA']]"
+attn john smith,"[['DELEG'], ['ALPHA'], ['ALPHA']]"
+attn: john smith,"[['DELEG'], ['ALPHA'], ['ALPHA']]"
+c/o john,"[['DELEG'], ['ALPHA']]"
+c/o dell&schaefer law firm,"[['DELEG'], ['ALPHA'], ['AND'], ['ALPHA'], ['ALPHA'], ['ALPHA']]"

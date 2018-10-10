@@ -1,18 +1,20 @@
 import csv
-import sys
+import os
 import pytest
-sys.path.append('.')
+import sys
+sys.path.append(".")
+os.chdir("{}/../".format(os.path.dirname(os.path.realpath(__file__))))
 
-import phrase_entity_extraction as pext
+import field_validate_transform_address as sequencer
+from field_validate_transform_address import sequencer
 
-@pytest.mark.skip
 def test_markers():
     marker_lengths = [
         ("123 main st", 2),
         ("901 s bolmar st # a", 2),
     ]
     for address, length in marker_lengths:
-        assert len(pext.get_markers(pext.seq, address, ['ADDRESS'])) == length, "{} should have {} markers".format(address, length)
+        assert len(sequencer.get_markers(address, ['_ADDRESS_'])) == length, "{} should have {} markers".format(address, length)
 
 def test_basics():
     valid_addresses = [
@@ -22,15 +24,15 @@ def test_basics():
     ]
 
     for address in valid_addresses:
-        assert pext.return_max_address4(pext.seq, address).upper() == address.upper(), address
+        assert sequencer.convert_high_address_validate_transform(address) == address.lower(), address
 
-def test_pobox():
-    sent = "po box 7001"
-    assert pext.is_pobox(pext.seq, pext.w(sent)) == True
+# def test_pobox():
+#     sent = "po box 7001"
+#     assert sequencer.is_pobox(sequencer.seq, sequencer.tokenize_to_list(sent)) == True
 
-def test_attn():
-    sent = "attn john doe"
-    assert pext.is_deleg(pext.seq, pext.w(sent)) == True
+# def test_attn():
+#     sent = "attn john doe"
+#     assert sequencer.is_deleg(sequencer.seq, sequencer.tokenize_to_list(sent)) == True
 
 
 def test_multiple_markers():
@@ -40,23 +42,44 @@ def test_multiple_markers():
         ("123 main st c/o gustav mahler", 4)
     ]
     for address, length in marker_lengths:
-        assert len(pext.get_markers(pext.seq, address, ['_ADDRESS_', '_ATTN_'])) == length, "{} should have {} markers".format(address, length)
+        assert len(sequencer.get_markers(address, ['_ADDRESS_', '_ATTN_'])) == length, "{} should have {} markers".format(address, length)
 
 
 def test_shortlist():
     shortlist = [
-        ("10 1ST AVE RM 26","10 1ST AVE RM 26","don't drop the 10 in front"),
+        ("100 CAPITOLA DRIVE STD 275","100 CAPITOLA DRIVE STD 275",""),
+        ("4189 nunc road lebanon", "4189 nunc road", "do not confuse city with address"),
+        ("po box 456 123 main st", "123 main st", "do not pick up from pobox"),
+        ("123 main po box 456", "123 main", "choose address over pobox"),
+        ("535 W GYPSY LN RD LOT 330","535 W GYPSY LN RD LOT 330","drops suite"),
+        ("21W487 TANAGER COURT","21W487 TANAGER COURT","drops it all"),
+        ("759 HWY ZZ","759 HWY ZZ","It dropped all of it"),
+        ("350 G STREET #E-1","350 G STREET #E-1","drops suite"),
+        ("5093 S WHITAKER DRIVE 2310-W","5093 S WHITAKER DRIVE 2310-W","drops suite 2310-w"),
+        ("2606 BOIS D'ARC LANE","2606 BOIS D'ARC LANE","Drops lane"),
+        ("20 CHURCH ST APT #2","20 CHURCH ST APT #2", "dropped apt with #2"),
+        ("N 7940 HWY E","N 7940 HWY E","didn't even get partial crediat"),
+        ("1700 J STREET APT #707","1700 J STREET APT #707","Drops that apt"),
+        ("300 9TH ST NORTHEAST","300 9TH ST NORTHEAST","Doesn't see last DIR"),
+        ("102 WEST NORTH BOX 278","102 WEST NORTH","it kept the wrong side!"),
+        ("1377 E FLORENCE BLVD #151-103","1377 E FLORENCE BLVD #151-103","Dropped suites"),
+        ("117 SOUTH 13TH ST 1ST FLOOR APT 1","117 SOUTH 13TH ST 1ST FLOOR APT 1","drops apt 1"),
+        ("10237 RED LION TAVERN","10237 RED LION TAVERN","Drops Tavern"),
+        ("1206 AVE L","1206 AVE L","Drops the whole thing"),
+        ("4 TROWBRIDGE PL #PH", "4 TROWBRIDGE PL #PH", "Drops the #PH"),
+        ("601 1/2 BELVUE STREET","601 1/2 BELVUE STREET","drops STREET"),
+        ("192 SOUTH UNION RD APT #4","192 SOUTH UNION RD APT #4","Drops apt, literaly, like apt, but not #4"),
+        ("25075 525 ST","25075 525 ST","IT NUKES IT COMPLETELY, WHY?"),
         ("1 HILLCREST CENTER DRIVE ST 225",    "1 HILLCREST CENTER DRIVE ST 225", "Don't drop the ST"),
         ("8690 SIERRA COLLEGE BLVD STE",       "8690 SIERRA COLLEGE BLVD",        "Drop the extra STE"),
         ("1590 WALLISVILLE ROAD POBOX 10190",  "1590 WALLISVILLE ROAD",           "Should drop the po box"),
         ("1905 N CENTER POINT RD",             "1905 N CENTER POINT RD",          "Do not drop the DR"),
         ("200 W CENTER PROMENADE #500",        "200 W CENTER PROMENADE #500",     "Do not drop PROMENADE"),
         ("ZERO DUVAL STREET",                  "ZERO DUVAL STREET",               "ZERO is a valid street number?"),
-        # TODO DEAL WITH ANY ALPHA NUMBER ("THIRTY-ONE NEW CHARDON STREET",      "THIRTY-ONE NEW CHARDON STREET",   "THIRTY-ONE is a valid street number"),
+        ("THIRTY-ONE NEW CHARDON STREET",      "THIRTY-ONE NEW CHARDON STREET",   "THIRTY-ONE is a valid street number"),
         ("PO BOX RKM",                         "PO BOX RKM",                      "PO BOXes can have alpha ids"),
         ("PO BOX QQ",                          "PO BOX QQ",                       "PO BOXes can have alpha ids"),
         ("PO BOX C-847",                       "PO BOX C-847",                    "PO BOXes can have mixed alpha num symbol ids"),
-        # FROM IMPROMPTU FILE
         ("N72W13536 Lund Lane Apt 116",        "N72W13536 Lund Lane Apt 116",     ""),
         ("1072 ST. CLAIR ROAD",                "1072 ST CLAIR ROAD",              ""),
         ("880 GOR-AN FARM RD",                 "880 GOR-AN FARM RD",              ""),
@@ -96,7 +119,6 @@ def test_shortlist():
         ("5502 D Shadow Glen CT","5502 D Shadow Glen CT",""),
         ("17101 CO RD 263","17101 CO RD 263",""),
         ("349 CO. RD. 396","349 CO RD 396",""),
-        # TODO ("3970 REBECK RD East St Paul","3970 REBECK RD","[[0, 4, 4, ['ADDRESS'], '3970 rebeck rd east']]"),
         ("101 MONTGOMERY AVENUE APT. B-1","101 MONTGOMERY AVENUE APT B-1",""),
         ("3020 W. SAN JUAN DRIVE","3020 W SAN JUAN DRIVE",""),
         ("PO BOX 5041IG BEAVER","PO BOX 5041IG",""),
@@ -127,7 +149,6 @@ def test_shortlist():
         ("9401LITTLE RIVER TPKE","9401LITTLE RIVER TPKE",""),
         ("50THIELMAN DRIVE","50THIELMAN DRIVE",""),
         ("411BUTTERNUT DR", "411BUTTERNUT DR", ""),
-        # NEW BATCH
         ("1101 W MURRAY DR Rm 607B","1101 W MURRAY DR Rm 607B",""),
         ("15422 40 AVE EAST", "15422 40 AVE EAST", ""),
         ("2871 LOWER EAST VALLEY RD", "2871 LOWER EAST VALLEY RD", ""),
@@ -145,18 +166,26 @@ def test_shortlist():
         ("75 MCKINELY AVENUE, UNIT B2-2", "75 MCKINELY AVENUE , UNIT B2-2", ""),
         ("151 PARKWAY NORTH APT 302", "151 PARKWAY NORTH APT 302", ""),
         ("4050 W 5 POINT HIGHWAY", "4050 W 5 POINT HIGHWAY", "its ok but took 4050 W to be suite"),
-        # TODO I GET BACK A DOUBLE ADDRESS! ("815 Elmore Street 14416 N. 177th LN", "815 Elmore Street", "took left as expected, let Ashley know"),
         ("23461 US HWY 5 N No. 818", "23461 US HWY 5 N No 818", "ok but took triple suite"),
-        # TODO ("3970 REBECK RD East St Paul", "3970 REBECK RD East St Paul", "it took in east, but east is part of saint paul"),
-        # ("1010 SHAGBARK RD 1 C", "1010 SHAGBARK RD 1 C", "ok, but it took C as suite and left the 1 as address..."),
-        # ("6900 STONERIDGE DR E33", "6900 STONERIDGE DR E33", "how are we supposed to tell that E33 is the suite? not the address?"),
-        # ("1431 MAPLEWOOD ST N.E.", "1431 MAPLEWOOD ST N.E.", "[[0, 4, 4, ['ADDRESS'], '1431 maplewood st n'], [4, 5, 1, ['_DIR_', 'SUITE'], 'e']]"),
-        # ("452 Union B Rd.", "452 UNION B RD", "[[0, 2, 2, ['ADDRESS'], '452 union'], [2, 3, 1, ['SUITE'], 'b']]"),
-        # ("17504 27TH AVE N.E.","17504 27TH AVE N E","[[0, 1, 1, ['SUITE'], '17504'], [1, 5, 4, ['ADDRESS'], '27th ave n e']]"),
+        ("1010 SHAGBARK RD 1 C", "1010 SHAGBARK RD 1 C", "ok, but it took C as suite and left the 1 as address..."),
+        ("6900 STONERIDGE DR E33", "6900 STONERIDGE DR E33", "how are we supposed to tell that E33 is the suite? not the address?"),
+        ("1431 MAPLEWOOD ST N.E.", "1431 MAPLEWOOD ST N.E.", "[[0, 4, 4, ['ADDRESS'], '1431 maplewood st n'], [4, 5, 1, ['_DIR_', 'SUITE'], 'e']]"),
+        ("452 Union B Rd.", "452 UNION B RD", "[[0, 2, 2, ['ADDRESS'], '452 union'], [2, 3, 1, ['SUITE'], 'b']]"),
+        ("17504 27TH AVE N.E.","17504 27TH AVE N E","[[0, 1, 1, ['SUITE'], '17504'], [1, 5, 4, ['ADDRESS'], '27th ave n e']]"),
     ]
     for address, expected, note in shortlist:
-        assert pext.return_max_address4(pext.seq, address).upper() == expected.upper(), '{},"{}"'.format(expected.upper(),pext.encode_from_word_list(pext.w(expected.lower())))
+        assert sequencer.convert_high_address_validate_transform(address) == " ".join(sequencer.tokenize_to_list(expected.lower())), sequencer.get_markers(expected.lower(),['_ADDRESS_', '_POBOX_', '_SUITE_', '_DIR_']) #'{},"{}"'.format(expected.lower(), sequencer.encode_from_word_list(sequencer.tokenize_to_list(expected.lower())))
 
+@pytest.mark.xfail
+def test_expected_to_fail():
+    shortlist = [
+          ("3970 REBECK RD East St Paul","3970 REBECK RD","[[0, 4, 4, ['ADDRESS'], '3970 rebeck rd east']]"),
+    ]
+    for address, expected, note in shortlist:
+        assert vtad.convert_high_address_validate_transform(address) == " ".join(vtad.tokenize_to_list(expected.lower())), '{},"{}"'.format(expected.lower(),vtad.encode_from_word_list(vtad.tokenize_to_list(expected.lower())))
+
+# expected to faile because SUITE can be interpreted as SUIT+E which is a misspelling of 'suite e', this is to cover cases like STEC which means 'suite c'
+@pytest.mark.xfail
 def test_incompletes():
     incompletes = [
         ("2010 OLD MONTGOMERY HWY SUITE",    "2010 OLD MONTGOMERY HWY"),
@@ -169,21 +198,21 @@ def test_incompletes():
         ("12665 VETERANS MEMORIAL DR SUITE", "12665 VETERANS MEMORIAL DR"),
     ]
     for address, expected in incompletes:
-       assert pext.return_max_address4(pext.seq, address).upper() == expected.upper(), '{} {}'.format(address, expected)
+       assert sequencer.convert_high_address_validate_transform(address) == expected.lower(), '{},"{}"'.format(address.lower(), sequencer.encode_from_word_list(sequencer.tokenize_to_list(address.lower())))
 
 
-def test_is_suite():
-    suites = [
-        "suite 255",
-    ]
+# def test_is_suite():
+#     suites = [
+#         "suite 255",
+#     ]
 
-    for suite in suites:
-        assert pext.is_suite(pext.seq, suite.lower()) == True, "'{}' should be a suite".format(suite.upper())
+#     for suite in suites:
+#         assert sequencer.is_suite(sequencer.seq, suite.lower()) == True, "'{}' should be a suite".format(suite.lower())
 
-    not_suites = [
-        "st 255"
-        "st"
-    ]
-    for suite in not_suites:
-        assert pext.is_suite(pext.seq, suite.lower()) == False, "'{}' should *NOT* be a suite".format(suite.upper())
+#     not_suites = [
+#         "st 255"
+#         "st"
+#     ]
+#     for suite in not_suites:
+#         assert sequencer.is_suite(sequencer.seq, suite.lower()) == False, "'{}' should *NOT* be a suite".format(suite.lower())
 

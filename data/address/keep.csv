@@ -1,0 +1,9 @@
+ADDRESS,SEQUENCE
+x,"[['_SUITE_'], ['_ADDRESS_']]"
+x,"[['_ADDRESS_']]"
+x,"[['_ADDRESS_'], ['_SUITE_']]"
+x,"[['_ADDRESS_'], ['_DIR_']]"
+x,"[['_ADDRESS_'], ['_DIR_'], ['_SUITE_']]"
+x,"[['_POBOX_']]"
+x,"[['_POBOX_'], ['_ADDRESS_']]"
+x,"[['_ADDRESS_'], ['_POBOX_']]"
