@@ -5,8 +5,8 @@ import sys
 sys.path.append(".")
 os.chdir("{}/../".format(os.path.dirname(os.path.realpath(__file__))))
 
-import field_validate_transform_address as sequencer
-from field_validate_transform_address import sequencer
+#import field_validate_transform_address as sequencer
+from addext import Sequencer, sequencer
 
 def test_markers():
     marker_lengths = [

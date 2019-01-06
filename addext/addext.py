@@ -2,6 +2,8 @@ import csv
 import os
 import re
 from hydraseq import Hydraseq
+import sys
+sys.path.append(os.path.dirname(__file__))
 from phrase_entity_encoder import encoder
 import logging
 #from field_transforms import trace_transform_replaced
