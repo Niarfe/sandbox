@@ -70,16 +70,19 @@ class Sequencer:
         with open(filepath, 'r') as source:
             csv_file = csv.DictReader(source)
             for row in csv_file:
+                #print(row['ADDRESSES'])
                 str_sequence = row['SEQUENCE'].strip()
                 if len(str_sequence.strip()) == 0:
                     continue
                 else:
+                    #print(str_sequence)
                     lst_sequence = eval(str_sequence)
                     self.train_with_provided_list(_seq, lst_sequence + lst_lst_identifier)
 
 
     def train_with_provided_list(self, seq, matrix_lst):
         """matrix list means [['DIGIT'],['ALPHA'],['WAY']] for example"""
+        #print(matrix_lst)
         return seq.insert(matrix_lst, is_learning=True).get_next_values()
 
 
