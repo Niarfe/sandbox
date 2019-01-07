@@ -25,15 +25,7 @@ def test_basics():
     ]
 
     for address in valid_addresses:
-        assert sequencer.convert_high_address_validate_transform(address) == address.lower(), address
-
-# def test_pobox():
-#     sent = "po box 7001"
-#     assert sequencer.is_pobox(sequencer.seq, sequencer.tokenize_to_list(sent)) == True
-
-# def test_attn():
-#     sent = "attn john doe"
-#     assert sequencer.is_deleg(sequencer.seq, sequencer.tokenize_to_list(sent)) == True
+        assert sequencer.parse(address) == address.lower(), address
 
 
 def test_multiple_markers():
@@ -175,7 +167,7 @@ def test_shortlist():
         ("17504 27TH AVE N.E.","17504 27TH AVE N E","[[0, 1, 1, ['SUITE'], '17504'], [1, 5, 4, ['ADDRESS'], '27th ave n e']]"),
     ]
     for address, expected, note in shortlist:
-        assert sequencer.convert_high_address_validate_transform(address) == " ".join(sequencer.tokenize_to_list(expected.lower())), sequencer.get_markers(expected.lower(),['_ADDRESS_', '_POBOX_', '_SUITE_', '_DIR_']) #'{},"{}"'.format(expected.lower(), sequencer.encode_from_word_list(sequencer.tokenize_to_list(expected.lower())))
+        assert sequencer.parse(address) == " ".join(sequencer.tokenize_to_list(expected.lower())), sequencer.get_markers(expected.lower(),['_ADDRESS_', '_POBOX_', '_SUITE_', '_DIR_']) #'{},"{}"'.format(expected.lower(), sequencer.encode_from_word_list(sequencer.tokenize_to_list(expected.lower())))
 
 @pytest.mark.xfail
 def test_expected_to_fail():
@@ -183,7 +175,7 @@ def test_expected_to_fail():
           ("3970 REBECK RD East St Paul","3970 REBECK RD","[[0, 4, 4, ['ADDRESS'], '3970 rebeck rd east']]"),
     ]
     for address, expected, note in shortlist:
-        assert vtad.convert_high_address_validate_transform(address) == " ".join(vtad.tokenize_to_list(expected.lower())), '{},"{}"'.format(expected.lower(),vtad.encode_from_word_list(vtad.tokenize_to_list(expected.lower())))
+        assert vtad.parse(address) == " ".join(vtad.tokenize_to_list(expected.lower())), '{},"{}"'.format(expected.lower(),vtad.encode_from_word_list(vtad.tokenize_to_list(expected.lower())))
 
 # expected to faile because SUITE can be interpreted as SUIT+E which is a misspelling of 'suite e', this is to cover cases like STEC which means 'suite c'
 @pytest.mark.xfail
@@ -199,21 +191,5 @@ def test_incompletes():
         ("12665 VETERANS MEMORIAL DR SUITE", "12665 VETERANS MEMORIAL DR"),
     ]
     for address, expected in incompletes:
-       assert sequencer.convert_high_address_validate_transform(address) == expected.lower(), '{},"{}"'.format(address.lower(), sequencer.encode_from_word_list(sequencer.tokenize_to_list(address.lower())))
-
-
-# def test_is_suite():
-#     suites = [
-#         "suite 255",
-#     ]
-
-#     for suite in suites:
-#         assert sequencer.is_suite(sequencer.seq, suite.lower()) == True, "'{}' should be a suite".format(suite.lower())
-
-#     not_suites = [
-#         "st 255"
-#         "st"
-#     ]
-#     for suite in not_suites:
-#         assert sequencer.is_suite(sequencer.seq, suite.lower()) == False, "'{}' should *NOT* be a suite".format(suite.lower())
+       assert sequencer.parse(address) == expected.lower(), '{},"{}"'.format(address.lower(), sequencer.encode_from_word_list(sequencer.tokenize_to_list(address.lower())))
 

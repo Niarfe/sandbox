@@ -7,7 +7,6 @@ import sys
 sys.path.append(root_path)
 from phrase_entity_encoder import encoder
 import logging
-#from field_transforms import trace_transform_replaced
 
 class BreathFirstSearch:
     """Relies on the structure of nodes to follow the output of get_markers
@@ -120,7 +119,7 @@ class Sequencer:
 
     convert_high_address_validate_transform_map = {}
     #@trace_transform_replaced
-    def convert_high_address_validate_transform(self, sent, _address_map={}, allthree=False):
+    def parse(self, sent, allthree=False):
 
         markers = self.get_markers(sent, ['_ADDRESS_', '_POBOX_', '_SUITE_', '_DIR_'])
         #print("MARKERS: ", markers)
@@ -143,25 +142,4 @@ class Sequencer:
         else:
             return " ".join([item[4] for item in max_branch])
 
-    # def convert_high_address_validate_transform2(sent, _address_map={}):
-    #     markers = self.get_markers(sent, ['_ADDRESS_', '_POBOX_', '_SUITE_', '_DIR_'])
 
-    #     bfs = BreathFirstSearch(markers)
-    #     keepers = [branch for branch in bfs.get_all_branches() if '_KEEP_' in seq2.look_ahead([node[3] for node in branch] ).get_next_values()]
-    #     max_len = 0
-    #     max_branch = []
-    #     for branch in keepers:
-    #         len_branch = branch[-1][1] - branch[0][0]
-    #         if len_branch > max_len:
-    #             max_len = len_branch
-    #             max_branch = branch
-
-    #     return " ".join([item[4] for item in max_branch]), keepers, markers, max_branch
-
-# sequencer = Sequencer()
-
-# if __name__ == "__main__":
-#     with open('addresses2.csv', 'r') as source:
-#         for line in source:
-#             expected,max_branch, markers,all_branches, keepers = sequencer.convert_high_address_validate_transform(line.lower(), {}, allthree=True)
-#             print(line.strip(), ',"', expected,'","', max_branch, '","', markers,'","', all_branches, '","',keepers, '"')

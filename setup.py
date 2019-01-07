@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='addrext',
-    version='0.0.5',
+    version='0.0.6',
     description='Address Extractor',
     url='https://github.com/hydraseq/addrext',
     author='Efrain Olivares',
