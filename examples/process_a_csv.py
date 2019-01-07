@@ -1,0 +1,10 @@
+import addrext
+
+sequencer = addrext.Sequencer()
+
+
+with open('data/addresses2.csv', 'r') as source:
+    for line in source:
+        expected,max_branch, markers,all_branches, keepers = sequencer.convert_high_address_validate_transform(line.lower(), {}, allthree=True)
+        print(line.strip(), ',"', expected,'","', max_branch, '","', markers,'","', all_branches, '","',keepers, '"')
+

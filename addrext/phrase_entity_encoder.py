@@ -1,7 +1,10 @@
 # This file converts incoming words into mini-sdrs by registering features of a word
 # The input to this file are a bunch of lists
-# From these lists we create regex that identify a feature's 
+# From these lists we create regex that identify a feature's
+import os
 import re
+import sys
+root_path = os.path.dirname(__file__)
 
 def load_category_from_file(fpath):
     """Take a one word per line file and return a regex for the concatenation '^(w1|w2)$'"""
@@ -34,11 +37,12 @@ for var in [
     'sp_arti',
     'sp_way',
     'sp_pre',
-    'numbers'
+    'numbers',
+    'xxxxx'
     ]:
-    drex[var] = load_category_from_file('data/address/{}.csv'.format(var, var))
+    drex[var] = load_category_from_file('{}/data/address/{}.csv'.format(root_path, var, var))
 
-apts_base = load_category_from_file_no_bookends('data/address/apts.csv')
+apts_base = load_category_from_file_no_bookends('{}/data/address/apts.csv'.format(root_path))
 # http://maf.directory/zp4/abbrev.html
 
 def encoder(word, trim=True):
@@ -77,7 +81,8 @@ def encoder(word, trim=True):
             ('DRAWER',       [ r'^drawer$' ]),
             ('DELEG',       [ r'^attn$', r'^attn:$', r'^c\/o$', r'^co$' ]),
             ('POB0',        [ r'^po$', r'^p\.o\.$' ]),
-            ('NEGATIVE',        [ drex['negatives'] ]),
+            ('NEGATIVE', [drex['negatives']]),
+            ('XXXXX',    [drex['xxxxx']]),
         # NUMBERS ONLY
         ('DIGIT',           [r'^\d+$']),
         ('DIGDASH',         [ r'\d+-\d+$' ]),
@@ -121,13 +126,13 @@ def encoder(word, trim=True):
         ('ATTN', [r'^:deleg$']),
         ('POBOX', [r'^:box$']),
     ]
-    
+
     encoding = [key for key, rexs in encodings for rex in rexs if re.match(rex, word)]
-    
+
     if not trim:
         return encoding
     else:
-        if any([key in ['P','O','NEGATIVE', 'TH','SP_ARTI','LETTER', 'WORDWAY', 'WAY', 'APT', 'ARTI', 'PRE', 'DIR', 'DELEG', 'POB2', 'POB0', 'POBOX1', 'FARM2MARK'] for key in encoding]) and 'ALPHA' in encoding:
+        if any([key in ['P','O','NEGATIVE', 'TH','SP_ARTI','LETTER', 'WORDWAY', 'WAY', 'APT', 'CONJ', 'ARTI', 'PRE', 'PREP', 'DIR', 'DELEG', 'POB2', 'POB0', 'POBOX1', 'FARM2MARK', 'XXXXX'] for key in encoding]) and 'ALPHA' in encoding:
             encoding.remove('ALPHA')  # Redudant category level if we have probable meaning
         if any([key in ['NUMS_1AL', 'NUMSTR', 'NTH'] for key in encoding]) and 'ALNUM' in encoding:
             encoding.remove('ALNUM')  # Redudant category level if we have probable meaning

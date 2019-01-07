@@ -2,8 +2,9 @@ import csv
 import os
 import re
 from hydraseq import Hydraseq
+root_path = os.path.dirname(__file__)
 import sys
-sys.path.append(os.path.dirname(__file__))
+sys.path.append(root_path)
 from phrase_entity_encoder import encoder
 import logging
 #from field_transforms import trace_transform_replaced
@@ -50,8 +51,8 @@ class BreathFirstSearch:
 
 class Sequencer:
     def __init__(self):
-        self.seq  = self.initialize_seq(['suite', 'address', 'dir', 'pobox', 'attn'], 'data/address', 'first')
-        self.seq2 = self.initialize_seq(['keep'], 'data/address', 'second')
+        self.seq  = self.initialize_seq(['suite', 'address', 'dir', 'pobox', 'attn'], '{}/data/address'.format(root_path), 'first')
+        self.seq2 = self.initialize_seq(['keep'], '{}/data/address'.format(root_path), 'second')
 
     def initialize_seq(self, lst_typs, fpath, id):
         seq = Hydraseq(id)
@@ -109,6 +110,7 @@ class Sequencer:
         for idx_beg in range(idx_tail):
             for idx_end in range(idx_beg + 1, idx_tail +1):
                 next_values = self.seq.look_ahead(self.encode_from_word_list(arr_w[idx_beg:idx_end])).get_next_values()
+                #print("NEXT VALUES: ", arr_w[idx_beg:idx_end], self.seq.get_active_values(), next_values)
                 matches = list(set(next_values) & set(lst_targets) )
                 if matches:
                     markers.append([idx_beg, idx_end, idx_end - idx_beg, matches, ' '.join(arr_w[idx_beg:idx_end])])
@@ -141,45 +143,25 @@ class Sequencer:
         else:
             return " ".join([item[4] for item in max_branch])
 
-    def convert_high_address_validate_transform2(sent, _address_map={}):
-        markers = self.get_markers(sent, ['_ADDRESS_', '_POBOX_', '_SUITE_', '_DIR_'])
+    # def convert_high_address_validate_transform2(sent, _address_map={}):
+    #     markers = self.get_markers(sent, ['_ADDRESS_', '_POBOX_', '_SUITE_', '_DIR_'])
 
-        bfs = BreathFirstSearch(markers)
-        keepers = [branch for branch in bfs.get_all_branches() if '_KEEP_' in seq2.look_ahead([node[3] for node in branch] ).get_next_values()]
-        max_len = 0
-        max_branch = []
-        for branch in keepers:
-            len_branch = branch[-1][1] - branch[0][0]
-            if len_branch > max_len:
-                max_len = len_branch
-                max_branch = branch
+    #     bfs = BreathFirstSearch(markers)
+    #     keepers = [branch for branch in bfs.get_all_branches() if '_KEEP_' in seq2.look_ahead([node[3] for node in branch] ).get_next_values()]
+    #     max_len = 0
+    #     max_branch = []
+    #     for branch in keepers:
+    #         len_branch = branch[-1][1] - branch[0][0]
+    #         if len_branch > max_len:
+    #             max_len = len_branch
+    #             max_branch = branch
 
-        return " ".join([item[4] for item in max_branch]), keepers, markers, max_branch
+    #     return " ".join([item[4] for item in max_branch]), keepers, markers, max_branch
 
-    # def is_address(seq, arr_st):
-    #     """Expects ["123","main","st"]"""
-    #     return any([pred == '_ADDRESS_' for pred in seq.look_ahead(encode_from_word_list(arr_st)).get_next_values()])
+# sequencer = Sequencer()
 
-    # def is_pobox(seq, arr_st):
-    #     """Expects ["123","main","st"]"""
-    #     assert isinstance(arr_st, list)
-    #     return any([pred == '_POBOX_' for pred in seq.look_ahead(encode_from_word_list(arr_st)).get_next_values()])
-
-
-    # def is_deleg(seq, arr_st):
-    #     """Expects ["123","main","st"]"""
-    #     assert isinstance(arr_st, list)
-    #     return any([pred == '_ATTN_' for pred in seq.look_ahead(encode_from_word_list(arr_st)).get_next_values()])
-
-    # def is_suite(seq, st):
-    #     """Expects ["123","main","st"]"""
-    #     assert isinstance(st, str)
-    #     return any([pred == '_SUITE_' for pred in seq.look_ahead(encode_from_word_list(tokenize_to_list(st))).get_next_values()])
-
-sequencer = Sequencer()
-
-if __name__ == "__main__":
-    with open('addresses2.csv', 'r') as source:
-        for line in source:
-            expected,max_branch, markers,all_branches, keepers = sequencer.convert_high_address_validate_transform(line.lower(), {}, allthree=True)
-            print(line.strip(), ',"', expected,'","', max_branch, '","', markers,'","', all_branches, '","',keepers, '"')
+# if __name__ == "__main__":
+#     with open('addresses2.csv', 'r') as source:
+#         for line in source:
+#             expected,max_branch, markers,all_branches, keepers = sequencer.convert_high_address_validate_transform(line.lower(), {}, allthree=True)
+#             print(line.strip(), ',"', expected,'","', max_branch, '","', markers,'","', all_branches, '","',keepers, '"')
