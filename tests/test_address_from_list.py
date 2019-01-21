@@ -38,8 +38,14 @@ def test_known_good_pobox_addresses():
     for pobox in poboxs:
         assert sequencer.parse(pobox) == pobox.lower(), "{} should be a pobox address".format(pobox)
 
+def test_known_good_unique():
+    base_addresses = _load_column('addrext/data/known_good/unique.csv', 'ADDRESSES')
 
-#@pytest.mark.skip
+    for base_address in base_addresses:
+        assert sequencer.parse(base_address) == base_address.lower(), '{},"{}"'.format(base_address.lower(), sequencer.encode_from_word_list(sequencer.tokenize_to_list(base_address.lower())))
+
+
+@pytest.mark.skip
 def test_known_good_full_clean_addresses():
     base_addresses = _load_column('addrext/data/known_good/full_clean_addresses.csv', 'ADDRESSES')
 
@@ -47,7 +53,7 @@ def test_known_good_full_clean_addresses():
         assert sequencer.parse(base_address) == base_address.lower(), '{},"{}"'.format(base_address.lower(), sequencer.encode_from_word_list(sequencer.tokenize_to_list(base_address.lower())))
 
 
-#@pytest.mark.skip
+@pytest.mark.skip
 def test_eighty_k_good_street_and_po_samples():
     base_addresses = _load_column('addrext/data/known_good/eighty_k_good_street_and_po_samples.csv', 'ADDRESSES')
 
