@@ -1,3 +1,4 @@
+ADDRESSES,SEQUENCE
 0-21 fennessey street sw,[['DIGDASH', 'ADR_HEAD'], ['ALPHA'], ['WORDWAY'], ['DIR']]
 0300 arboretum place suite 660,[['DIGIT', 'ADR_HEAD'], ['ALPHA'], ['WORDWAY'], ['APT', 'APT_NUM'], ['DIGIT', 'ADR_HEAD']]
 0794 chicago dr,[['DIGIT', 'ADR_HEAD'], ['ALPHA'], ['WAY']]
