@@ -39,7 +39,7 @@ def test_known_good_pobox_addresses():
         assert sequencer.parse(pobox) == pobox.lower(), "{} should be a pobox address".format(pobox)
 
 def test_known_good_unique():
-    base_addresses = _load_column('addrext/data/known_good/unique.csv', 'ADDRESSES')
+    base_addresses = _load_column('addrext/data/known_good/uniques.csv', 'ADDRESSES')
 
     for base_address in base_addresses:
         assert sequencer.parse(base_address) == base_address.lower(), '{},"{}"'.format(base_address.lower(), sequencer.encode_from_word_list(sequencer.tokenize_to_list(base_address.lower())))
